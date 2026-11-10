@@ -1,0 +1,13 @@
+{
+  "name": "Travel MYO",
+  "short_name": "Travel MYO",
+  "description": "Your Yoto playlists, saved on this device for trips with no internet.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eaf5fc",
+  "theme_color": "#eaf5fc",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

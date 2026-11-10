@@ -1,0 +1,2395 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Travel MYO">
+<meta name="theme-color" content="#eaf5fc">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+<title>Travel MYO</title>
+<style>
+  :root {
+    --bg: #eaf5fc;
+    --ink: #1c2a44;
+    --soft: #5d6d8a;
+    --accent: #2f80ed;
+    --accent-dark: #1f63c0;
+    --card: #ffffff;
+    --pill: #d4e8f7;
+    --line: #bcd8ee;
+    --track: #c7e0f3;
+    --thumb: #9cc3e0;
+    --good: #2e9e5b;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-rounded, "Avenir Next Rounded", "Nunito", system-ui, -apple-system, sans-serif;
+    -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+    overscroll-behavior: none;
+  }
+  input { -webkit-user-select: text; user-select: text; }
+  img { -webkit-user-drag: none; pointer-events: none; }
+  button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+  svg { width: 100%; height: 100%; fill: currentColor; display: block; }
+
+  /* ---------- Sign-in ---------- */
+  #login {
+    min-height: 100%; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; text-align: center; padding: 32px 24px; gap: 18px;
+  }
+  #login h1 { font-size: 2.2rem; margin: 0; }
+  #login p { max-width: 36rem; color: var(--soft); margin: 0; line-height: 1.5; }
+  #login .fine { font-size: .9rem; }
+  #login summary { cursor: pointer; }
+  #login code {
+    display: inline-block; background: #fff; padding: 4px 8px; border-radius: 8px;
+    font-size: .85rem; word-break: break-all; -webkit-user-select: text; user-select: text; color: var(--ink);
+  }
+  .primary {
+    background: var(--accent); color: #fff; font-size: 1.3rem; font-weight: 700;
+    padding: 16px 34px; border-radius: 999px; box-shadow: 0 6px 0 var(--accent-dark);
+  }
+  .primary:active { transform: translateY(3px); box-shadow: 0 3px 0 var(--accent-dark); }
+  .err { color: #b3261e; font-weight: 600; }
+
+  /* ---------- Library ---------- */
+  #library { padding: max(env(safe-area-inset-top), 16px) 18px 150px; }
+  #library header {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px 20px;
+    flex-wrap: wrap; padding: 6px 4px 14px;
+  }
+  #title { margin: 0; font-size: 2.2rem; letter-spacing: .5px; display: inline-block; }
+  .search { flex: 1 1 220px; max-width: 560px; display: flex; gap: 10px; align-items: center; }
+  #search {
+    flex: 1; min-width: 0; width: 100%; font: inherit; font-size: 1.1rem; color: var(--ink);
+    padding: 12px 20px; border-radius: 999px; border: 2px solid var(--line); background: #fff;
+    -webkit-appearance: none; appearance: none; outline: none;
+  }
+  #search:focus { border-color: var(--accent); }
+  .sect { margin: 6px 4px 12px; font-size: 1.2rem; color: var(--soft); }
+  .strip {
+    display: flex; gap: 14px; overflow-x: auto; padding: 4px 4px 16px;
+    -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+  }
+  .strip::-webkit-scrollbar { height: 0; }
+  .strip .tile { flex: none; width: 128px; }
+  .groups, .profs {
+    display: flex; gap: 16px; overflow-x: auto; padding: 4px 4px 14px;
+    -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+  }
+  .groups::-webkit-scrollbar, .profs::-webkit-scrollbar { height: 0; }
+  .grp {
+    flex: none; width: 92px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: none; padding: 0;
+  }
+  .grp:active, .prof:active { transform: scale(.95); }
+  .gimg {
+    width: 84px; height: 84px; border-radius: 50%; overflow: hidden; background: #fff;
+    box-shadow: 0 4px 10px rgba(30, 60, 100, .15); border: 4px solid transparent;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .gimg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gimg .ph { font-size: 2.2rem; }
+  .grp.on .gimg { border-color: var(--accent); }
+  .gname {
+    font-size: .85rem; font-weight: 700; line-height: 1.15; text-align: center; max-width: 92px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  /* Profile buttons (one per child) */
+  .prof {
+    flex: none; width: 84px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: none; padding: 0;
+  }
+  .pimg {
+    width: 68px; height: 68px; border-radius: 50%; background: #fff; font-size: 2.1rem;
+    box-shadow: 0 4px 10px rgba(30, 60, 100, .15); border: 4px solid transparent;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .prof.on .pimg { border-color: var(--accent); background: var(--pill); }
+  .pname {
+    font-size: .9rem; font-weight: 800; line-height: 1.15; text-align: center; max-width: 84px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .tabs { display: flex; gap: 12px; padding: 2px 4px 14px; flex-wrap: wrap; }
+  .tab { background: var(--pill); font-size: 1.15rem; font-weight: 700; padding: 12px 26px; border-radius: 999px; }
+  .tab.on { background: var(--accent); color: #fff; box-shadow: 0 4px 0 var(--accent-dark); }
+  .tab:active { transform: translateY(2px); }
+  .grouphead { display: flex; align-items: center; gap: 12px; margin: 4px 4px 12px; }
+  .grouphead .sect { margin: 0; flex: 1; font-size: 1.4rem; color: var(--ink); }
+  .grouphead button {
+    background: #4caf50; color: #fff; font-weight: 800; font-size: 1.15rem; padding: 12px 28px;
+    border-radius: 999px; box-shadow: 0 4px 0 #388e3c;
+  }
+  .grouphead button:active { transform: translateY(2px); box-shadow: 0 2px 0 #388e3c; }
+  #grid {
+    display: grid; gap: 20px 16px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  .tile {
+    background: var(--card); border-radius: 20px; padding: 8px 8px 12px;
+    box-shadow: 0 5px 14px rgba(30, 60, 100, .12); text-align: center;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .tile:active { transform: scale(.96); }
+  .art {
+    position: relative; width: 100%; aspect-ratio: 2 / 3; border-radius: 14px; overflow: hidden; background: var(--pill);
+  }
+  .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .art img.wide { object-fit: contain; }
+  .ph {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    font-size: 3.2rem; font-weight: 800; color: rgba(28, 42, 68, .55);
+  }
+  .name {
+    font-size: .98rem; font-weight: 700; line-height: 1.25;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    min-height: 2.5em;
+  }
+  #msg { padding: 10px 6px; }
+  .badge-dl {
+    position: absolute; left: 6px; bottom: 6px; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--good); color: #fff; font-size: .85rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .3); pointer-events: none;
+  }
+  #grid.list .badge-dl { width: 18px; height: 18px; font-size: .6rem; left: 3px; bottom: 3px; }
+
+  #offlineBar {
+    margin: 0 4px 12px; padding: 10px 16px; border-radius: 16px; background: #fff3c4; color: #5a4300; font-weight: 700;
+  }
+  #hint {
+    margin: 0 4px 14px; padding: 12px 14px 12px 16px; border-radius: 16px; background: #fff;
+    border: 2px dashed var(--line); display: flex; gap: 12px; align-items: center; color: var(--soft); line-height: 1.35;
+  }
+  #hint span { flex: 1; }
+  #hint button { flex: none; background: var(--pill); border-radius: 999px; padding: 8px 14px; font-weight: 700; }
+
+  /* List view: one playlist per row, small cover on the left */
+  #viewBtn {
+    flex: none; font: inherit; font-weight: 800; font-size: 1.05rem; color: var(--ink);
+    background: #fff; border: 2px solid var(--line); border-radius: 999px; padding: 10px 18px;
+    box-shadow: 0 3px 0 var(--line); cursor: pointer;
+  }
+  #viewBtn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+  #grid.list { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 10px 14px; }
+  #grid.list .tile {
+    flex-direction: row; align-items: center; gap: 14px; padding: 8px 16px 8px 8px;
+    border-radius: 18px; text-align: left; min-height: 88px;
+  }
+  #grid.list .art { width: 48px; flex: none; border-radius: 10px; }
+  #grid.list .ph { font-size: 1.5rem; }
+  #grid.list .name { font-size: 1.1rem; min-height: 0; -webkit-line-clamp: 3; flex: 1; }
+
+  /* Favourites, NEW badge, sort row */
+  .tile { position: relative; }
+  .fav {
+    position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,.18); color: rgba(255,255,255,.95); display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .fav svg { width: 22px; height: 22px; fill: currentColor; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+  .fav.on { color: #ff4d67; background: rgba(255,255,255,.3); }
+  .fav:active { transform: scale(.88); }
+  .badge-new {
+    position: absolute; top: 12px; left: 12px; background: #4caf50; color: #fff; font-weight: 800;
+    font-size: .72rem; letter-spacing: .5px; padding: 4px 9px; border-radius: 999px;
+    box-shadow: 0 2px 5px rgba(30,60,100,.3); pointer-events: none;
+  }
+  .strip .fav { width: 34px; height: 34px; top: 10px; right: 10px; }
+  .strip .fav svg { width: 19px; height: 19px; }
+  #grid.list .fav { top: 50%; right: 14px; transform: translateY(-50%); width: 44px; height: 44px; background: transparent; color: #b9c8da; }
+  #grid.list .fav.on { color: #e8445a; background: transparent; }
+  #grid.list .fav svg { filter: none; }
+  #grid.list .fav:active { transform: translateY(-50%) scale(.88); }
+  #grid.list .tile { padding-right: 66px; }
+  #grid.list .badge-new { top: 6px; left: 6px; font-size: .62rem; padding: 3px 7px; }
+  .sortrow { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 0 4px 12px; font-weight: 700; color: var(--soft); }
+  #sortSel {
+    font: inherit; font-weight: 700; color: var(--ink); background: #fff; border: 2px solid var(--line);
+    border-radius: 999px; padding: 8px 14px; -webkit-appearance: none; appearance: none; outline: none;
+  }
+  #pFav { position: absolute; top: max(env(safe-area-inset-top), 12px); right: 18px; width: 56px; height: 56px; padding: 15px; color: #b9c8da; }
+  #pFav.on { color: #e8445a; background: #fff; }
+  #pFav svg { fill: currentColor; }
+
+  /* ---------- Mini bar ---------- */
+  #mini {
+    position: fixed; left: 12px; right: 12px; bottom: max(env(safe-area-inset-bottom), 12px);
+    background: #fff; border-radius: 26px; padding: 8px 14px 8px 8px;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 8px 24px rgba(30, 60, 100, .25); z-index: 5;
+  }
+  #miniArt { width: 48px; height: 72px; border-radius: 10px; overflow: hidden; flex: none; background: var(--pill); }
+  #miniArt img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #miniArt img.wide { object-fit: contain; }
+  #miniArt .ph { font-size: 1.6rem; }
+  #miniName { flex: 1; font-size: 1.15rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .round {
+    width: 64px; height: 64px; border-radius: 50%; background: var(--pill); color: var(--ink);
+    padding: 18px; flex: none;
+  }
+  .round:active { transform: scale(.92); }
+  .round.big { width: 92px; height: 92px; padding: 26px; background: var(--accent); color: #fff; box-shadow: 0 5px 0 var(--accent-dark); }
+  #mini .round { width: 60px; height: 60px; padding: 16px; }
+
+  /* ---------- Player (portrait: stacked) ---------- */
+  #player {
+    position: fixed; inset: 0; background: var(--bg); z-index: 10;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: max(env(safe-area-inset-top), 12px) 18px max(env(safe-area-inset-bottom), 12px);
+    overflow: hidden;
+  }
+  #backBtn { align-self: flex-start; width: 56px; height: 56px; padding: 14px 16px 14px 12px; }
+  .pbody { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 640px; flex: none; }
+  .pcover {
+    height: min(32vh, 340px); aspect-ratio: 2 / 3; border-radius: 20px; overflow: hidden;
+    box-shadow: 0 8px 22px rgba(30, 60, 100, .25); background: var(--pill);
+  }
+  .pcover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pcover img.wide { object-fit: contain; }
+  #ptitle { margin: 4px 0 0; font-size: 1.4rem; text-align: center; line-height: 1.2; }
+  #ptrack { margin: 0; color: var(--soft); font-size: 1.05rem; text-align: center; min-height: 1.3em; }
+  .bar { width: 100%; height: 10px; border-radius: 5px; background: var(--track); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 5px; }
+  .controls { display: flex; align-items: center; justify-content: center; gap: 26px; padding: 4px 0; }
+  #pmsg { color: #b3261e; font-weight: 700; text-align: center; margin: 0; min-height: 1.1em; }
+
+  #tracks {
+    list-style: none; margin: 4px 0 0; padding: 4px 4px 24px; width: 100%; max-width: 640px;
+    flex: 1; min-height: 0; overflow-y: scroll; -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain; touch-action: pan-y;
+  }
+  #tracks::-webkit-scrollbar { width: 14px; }
+  #tracks::-webkit-scrollbar-thumb { background: var(--thumb); border-radius: 8px; border: 3px solid var(--bg); }
+  #tracks li button {
+    width: 100%; min-height: 66px; display: flex; align-items: center; gap: 14px; text-align: left;
+    background: var(--card); border-radius: 18px; padding: 10px 16px; margin-bottom: 10px;
+    font-size: 1.2rem; font-weight: 600; box-shadow: 0 3px 8px rgba(30, 60, 100, .08);
+  }
+  #tracks li button:active { transform: scale(.98); }
+  #tracks li button.now { background: var(--accent); color: #fff; }
+  #tracks .num {
+    width: 40px; height: 40px; border-radius: 50%; background: var(--pill); color: var(--ink);
+    display: flex; align-items: center; justify-content: center; flex: none; font-size: 1rem; font-weight: 700;
+  }
+  #tracks .ico {
+    width: 56px; height: 56px; border-radius: 14px; background: var(--pill); flex: none;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  #tracks .ico img { width: 44px; height: 44px; image-rendering: pixelated; display: block; }
+  #tracks li button.now .ico { background: #fff; }
+  #tracks li button.now .num { background: #fff; color: var(--accent-dark); }
+  #tracks .tt {
+    flex: 1; line-height: 1.25;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  /* ---------- Player (wide screens: cover + controls left, track list right) ---------- */
+  @media (orientation: landscape) and (min-width: 800px) {
+    #player {
+      display: grid; grid-template-columns: 40% 1fr; grid-template-rows: auto 1fr;
+      column-gap: 28px; row-gap: 0; align-items: start; justify-items: stretch;
+    }
+    #backBtn { grid-column: 1; grid-row: 1; }
+    #pFav { width: 56px; height: 56px; }
+    .pbody { grid-column: 1; grid-row: 2; align-self: start; margin: 0 auto; }
+    .pcover { height: min(40vh, 330px); }
+    #tracks {
+      grid-column: 2; grid-row: 1 / span 2; align-self: stretch; max-width: none;
+      height: 100%; margin: 0;
+    }
+  }
+  @media (max-height: 640px) {
+    .pcover { height: min(28vh, 220px); }
+    .round.big { width: 76px; height: 76px; padding: 20px; }
+  }
+
+  /* ---------- Phones (narrow, upright): compact player so the track list has room ---------- */
+  @media (max-width: 600px) and (orientation: portrait) {
+    #player { padding-left: 14px; padding-right: 14px; gap: 4px; }
+    #backBtn { width: 48px; height: 48px; padding: 12px 14px 12px 10px; }
+    .pbody {
+      display: grid; grid-template-columns: 104px 1fr; column-gap: 14px; row-gap: 6px; align-items: center;
+      grid-template-areas: "cover title" "cover track" "bar bar" "controls controls" "msg msg";
+    }
+    .pcover { grid-area: cover; width: 104px; height: 156px; border-radius: 14px; }
+    #ptitle { grid-area: title; text-align: left; font-size: 1.15rem; align-self: end; margin: 0; }
+    #ptrack { grid-area: track; text-align: left; font-size: .95rem; align-self: start; min-height: 0; }
+    .bar { grid-area: bar; }
+    .controls { grid-area: controls; gap: 22px; padding: 2px 0; }
+    #pmsg { grid-area: msg; min-height: 0; }
+    .round { width: 56px; height: 56px; padding: 15px; }
+    .round.big { width: 76px; height: 76px; padding: 21px; }
+    #mini .round { width: 52px; height: 52px; padding: 14px; }
+    #tracks { margin-top: 2px; padding-bottom: 16px; }
+    #tracks li button { min-height: 58px; font-size: 1.05rem; padding: 8px 12px; margin-bottom: 8px; }
+    #tracks .num { width: 34px; height: 34px; font-size: .9rem; }
+    #tracks .ico { width: 46px; height: 46px; }
+    #tracks .ico img { width: 36px; height: 36px; }
+    .grouphead .sect { font-size: 1.2rem; }
+  }
+
+  /* ---------- Buttons, switches and fields used in the grown-ups corner ---------- */
+  .btn { background: var(--pill); padding: 12px 18px; border-radius: 14px; font-weight: 700; }
+  .btn:active { transform: scale(.97); }
+  .btn.pri { background: var(--accent); color: #fff; }
+  .btn.danger { background: #ffd6d2; }
+  .btn.mini { padding: 8px 12px; font-size: .9rem; }
+  .btn:disabled { opacity: .5; }
+  .sw {
+    width: 54px; height: 32px; border-radius: 999px; background: #cfdbe8; position: relative; flex: none; padding: 0;
+    transition: background .15s;
+  }
+  .sw::after {
+    content: ''; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: left .15s;
+  }
+  .sw[aria-checked="true"] { background: var(--accent); }
+  .sw[aria-checked="true"]::after { left: 25px; }
+  .field {
+    width: 100%; font: inherit; font-size: 1.05rem; color: var(--ink); background: #fff;
+    padding: 12px 16px; border-radius: 14px; border: 2px solid var(--line); outline: none;
+    -webkit-appearance: none; appearance: none; margin-bottom: 10px;
+  }
+  .field:focus { border-color: var(--accent); }
+  .sel {
+    font: inherit; font-weight: 700; color: var(--ink); background: #fff; border: 2px solid var(--line);
+    border-radius: 12px; padding: 9px 12px; outline: none;
+  }
+
+  /* ---------- Maths question ---------- */
+  #lock {
+    position: fixed; inset: 0; background: rgba(20, 30, 55, .6); z-index: 30;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  #lock .box { background: #fff; border-radius: 24px; padding: 24px; width: 100%; max-width: 360px; text-align: center; }
+  #lock h2 { margin: 0 0 6px; }
+  #lockQ { font-size: 2rem; font-weight: 800; margin: 10px 0 14px; }
+  #lockA { text-align: center; font-size: 1.6rem; }
+  #lockMsg { min-height: 1.3em; margin: 0 0 10px; }
+  #lock .row { display: flex; gap: 10px; justify-content: center; }
+
+  /* ---------- Grown-ups corner ---------- */
+  #grownups {
+    position: fixed; inset: 0; background: var(--bg); z-index: 20;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  .gwrap {
+    max-width: 820px; margin: 0 auto;
+    padding: max(env(safe-area-inset-top), 14px) 16px max(env(safe-area-inset-bottom), 28px);
+  }
+  .ghead { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+  .ghead h2 { margin: 0; font-size: 1.5rem; flex: 1; }
+  .ghead .round { width: 48px; height: 48px; padding: 13px; }
+  .gtabs {
+    display: flex; gap: 8px; margin: 6px 0 14px; position: sticky; top: 0; background: var(--bg);
+    padding: 8px 0; z-index: 2; flex-wrap: wrap;
+  }
+  .gtab { background: var(--pill); font-weight: 800; padding: 10px 16px; border-radius: 999px; }
+  .gtab.on { background: var(--accent); color: #fff; }
+  .panel {
+    background: #fff; border-radius: 20px; padding: 16px; margin-bottom: 14px;
+    box-shadow: 0 3px 10px rgba(30, 60, 100, .08);
+  }
+  .panel .p, .pane > .p { margin: 8px 0; line-height: 1.4; }
+  .soft { color: var(--soft); }
+  .small { font-size: .85rem; }
+  .line { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 6px 0; }
+  .line.wrap { flex-wrap: wrap; justify-content: flex-start; }
+  .line > div { flex: 1; min-width: 0; }
+  .meter { height: 12px; border-radius: 6px; background: var(--track); overflow: hidden; margin: 10px 0 6px; }
+  .meter i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 6px; }
+  .meter.over i { background: #d9534f; }
+  .warn { color: #a35c00; font-weight: 700; }
+  #dlList, #profList, #pfList { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .drow {
+    display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 16px; padding: 8px 12px 8px 8px;
+    box-shadow: 0 2px 8px rgba(30, 60, 100, .08);
+  }
+  .drow .thumb { width: 44px; aspect-ratio: 2 / 3; border-radius: 8px; overflow: hidden; background: var(--pill); flex: none; }
+  .drow .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .drow .thumb .ph { font-size: 1.3rem; }
+  .drow .info { flex: 1; min-width: 0; }
+  .drow .t {
+    font-weight: 700; line-height: 1.2;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .drow .s { font-size: .85rem; color: var(--soft); margin-top: 2px; }
+  .drow .s.bad { color: #b3261e; font-weight: 700; }
+  .drow .s.upd { color: #a35c00; font-weight: 700; }
+  .drow .em { font-size: 1.8rem; width: 44px; text-align: center; flex: none; }
+  .pbar { height: 6px; background: var(--track); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .pbar i { display: block; height: 100%; width: 0; background: var(--accent); }
+  .emojis { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+  .emojis button { width: 48px; height: 48px; border-radius: 50%; background: var(--pill); font-size: 1.6rem; padding: 0; }
+  .emojis button.on { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-dark) inset; }
+  .pick { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 14px; padding: 6px 12px 6px 8px; }
+  .pick input { width: 24px; height: 24px; flex: none; accent-color: var(--accent); }
+  #pfList { max-height: 46vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 2px; }
+  #dlBanner { font-weight: 700; color: var(--accent-dark); }
+  #grownups pre {
+    background: #eef3f9; padding: 10px; border-radius: 10px; font-size: .72rem; overflow: auto;
+    max-height: 50vh; -webkit-user-select: text; user-select: text; white-space: pre-wrap; word-break: break-all;
+  }
+</style>
+</head>
+<body>
+
+<section id="login" hidden>
+  <h1>✈️ Travel MYO</h1>
+  <p>Your Yoto playlists, saved on this device so they play on planes, in cars and anywhere else with no internet.</p>
+  <ul class="fine" style="text-align:left;display:inline-block;margin:0 0 12px;padding-left:20px">
+    <li>A grown-up picks which playlists to save, while on Wi-Fi</li>
+    <li>Big picture tiles, so little ones can choose for themselves</li>
+    <li>A profile for each child, with only their playlists</li>
+  </ul>
+  <p>Tap the button and sign in with your usual Yoto account.</p>
+  <button id="loginBtn" class="primary">Sign in with Yoto</button>
+  <p id="loginErr" class="err" hidden></p>
+  <p class="fine">🔒 You sign in on Yoto's own website, so this page never sees your password. It can only view and play: it can't change, add or delete anything in your Yoto account. Saved playlists stay on your own device.</p>
+  <p class="fine">Tip: on an iPad or phone, tap Share, then "Add to Home Screen", to get an app icon. Do this before saving playlists.</p>
+  <details class="fine">
+    <summary>For whoever set this page up</summary>
+    <p>This page's address is <code id="redirectShow"></code><br>
+       It must be listed under "Allowed Callback URLs" in the Yoto developer app.</p>
+  </details>
+</section>
+
+<section id="library" hidden>
+  <header>
+    <h1 id="title">✈️ Travel MYO</h1>
+    <div class="search">
+      <input id="search" type="search" placeholder="Search" autocomplete="off" autocapitalize="off"
+             autocorrect="off" spellcheck="false" enterkeyhint="search" aria-label="Search playlists">
+      <button id="viewBtn" type="button" aria-label="Switch between pictures and a list">☰ List</button>
+    </div>
+  </header>
+  <div id="offlineBar" hidden>✈️ No internet right now, so here are the playlists saved on this device.</div>
+  <div id="hint" hidden>
+    <span>👋 Grown-ups: press and hold the title above for 2 seconds to choose playlists to save for your trip.</span>
+    <button id="hintOk" type="button">Got it</button>
+  </div>
+  <div id="profiles" class="profs" hidden></div>
+  <div id="groups" class="groups" hidden></div>
+  <div id="tabs" class="tabs">
+    <button class="tab on" id="tabMine" data-tab="mine">My Cards</button>
+    <button class="tab" id="tabClub" data-tab="club">Science Club</button>
+  </div>
+  <div id="groupHead" class="grouphead" hidden>
+    <h2 id="groupName" class="sect"></h2>
+    <button id="groupAll">Show all</button>
+  </div>
+  <div id="sortRow" class="sortrow">
+    <label for="sortSel">Sort</label>
+    <select id="sortSel" aria-label="Sort playlists">
+      <option value="az">A to Z</option>
+      <option value="new">Newest added</option>
+      <option value="recent">Recently played</option>
+    </select>
+  </div>
+  <div id="msg" hidden></div>
+  <section id="favWrap" hidden>
+    <h2 class="sect">Favourites ♥</h2>
+    <div id="favs" class="strip"></div>
+  </section>
+  <section id="recentWrap" hidden>
+    <h2 class="sect">Recently played</h2>
+    <div id="recent" class="strip"></div>
+  </section>
+  <h2 id="allHead" class="sect" hidden>All playlists</h2>
+  <main id="grid"></main>
+</section>
+
+<div id="mini" hidden>
+  <div id="miniArt"></div>
+  <span id="miniName"></span>
+  <button id="miniPlay" class="round" aria-label="Play or pause"></button>
+</div>
+
+<div id="player" hidden>
+  <button id="backBtn" class="round" aria-label="Back"></button>
+  <button id="pFav" class="round" aria-label="Favourite"></button>
+  <div class="pbody">
+    <div id="pcover" class="pcover"></div>
+    <h2 id="ptitle"></h2>
+    <p id="ptrack"></p>
+    <div class="bar"><i id="pbar"></i></div>
+    <div class="controls">
+      <button id="prevBtn" class="round" aria-label="Previous"></button>
+      <button id="rewBtn" class="round" aria-label="Back 10 seconds"></button>
+      <button id="playBtn" class="round big" aria-label="Play or pause"></button>
+      <button id="nextBtn" class="round" aria-label="Next"></button>
+    </div>
+    <p id="pmsg"></p>
+  </div>
+  <ol id="tracks"></ol>
+</div>
+
+<div id="lock" hidden>
+  <div class="box">
+    <h2>Grown-ups only 🔒</h2>
+    <p class="soft" style="margin:0">Answer this to carry on.</p>
+    <div id="lockQ"></div>
+    <input id="lockA" class="field" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-label="Answer">
+    <p id="lockMsg" class="err"></p>
+    <div class="row">
+      <button id="lockOk" class="btn pri">Open</button>
+      <button id="lockCancel" class="btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="grownups" hidden>
+  <div class="gwrap">
+    <div class="ghead">
+      <h2>Grown-ups corner</h2>
+      <button id="gClose" class="round" aria-label="Close"></button>
+    </div>
+    <div class="gtabs">
+      <button class="gtab on" data-pane="downloads">Downloads</button>
+      <button class="gtab" data-pane="profiles">Profiles</button>
+      <button class="gtab" data-pane="settings">Settings</button>
+      <button class="gtab" data-pane="info">Info</button>
+    </div>
+
+    <div id="paneDownloads" class="pane">
+      <div class="panel">
+        <div class="line">
+          <label for="capSel"><b>Space for downloads</b></label>
+          <select id="capSel" class="sel"></select>
+        </div>
+        <div class="meter" id="meter"><i id="meterBar"></i></div>
+        <p id="dlUse" class="p"></p>
+        <p id="devUse" class="p soft small"></p>
+        <p class="p soft small">If this device runs very low on space, the browser may remove downloads. They can be downloaded again.</p>
+        <p id="persistNote" class="p soft small"></p>
+      </div>
+      <div class="panel">
+        <p class="p" style="margin-top:0">📶 Connect to Wi-Fi and keep this screen open while playlists download. Once saved, they play with no internet at all.</p>
+        <p id="dlBanner" class="p" hidden></p>
+        <input id="dlSearch" class="field" type="search" placeholder="Search playlists" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <div class="line wrap">
+          <button id="dlAll" class="btn pri">Download all</button>
+          <button id="dlNone" class="btn">Remove all</button>
+          <select id="dlFilter" class="sel" aria-label="Show">
+            <option value="all">Show: everything</option>
+            <option value="saved">Show: saved</option>
+            <option value="not">Show: not saved</option>
+            <option value="update">Show: newer version on Yoto</option>
+          </select>
+        </div>
+      </div>
+      <ul id="dlList"></ul>
+    </div>
+
+    <div id="paneProfiles" class="pane" hidden>
+      <div id="profView">
+        <p class="p">Make a profile for each child and choose which playlists they see. On the main screen they tap their picture, and only their playlists show up.</p>
+        <ul id="profList"></ul>
+        <button id="profAdd" class="btn pri">+ Add a profile</button>
+      </div>
+      <div id="profEdit" class="panel" hidden>
+        <input id="pfName" class="field" placeholder="Name" maxlength="20" autocomplete="off">
+        <div id="pfEmoji" class="emojis"></div>
+        <p id="pfCount" class="p soft"></p>
+        <input id="pfSearch" class="field" type="search" placeholder="Search playlists" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <div class="line wrap">
+          <button id="pfAll" class="btn">Select all shown</button>
+          <button id="pfNone" class="btn">Clear shown</button>
+        </div>
+        <ul id="pfList"></ul>
+        <div class="line wrap">
+          <button id="pfSave" class="btn pri">Save</button>
+          <button id="pfCancel" class="btn">Cancel</button>
+          <button id="pfDelete" class="btn danger">Delete profile</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="paneSettings" class="pane" hidden>
+      <div class="panel">
+        <div class="line">
+          <div><b>Only show saved playlists</b><div class="soft small">Hides anything not saved on this device. This happens by itself whenever there's no internet.</div></div>
+          <button id="swOnlyDl" class="sw" role="switch" aria-checked="false" aria-label="Only show saved playlists"></button>
+        </div>
+        <div class="line">
+          <div><b>Ask a maths question first</b><div class="soft small">Keeps little fingers out of this corner.</div></div>
+          <button id="swLock" class="sw" role="switch" aria-checked="true" aria-label="Ask a maths question first"></button>
+        </div>
+        <div class="line">
+          <div><b>Screen stays on while playing</b></div>
+          <button id="swAwake" class="sw" role="switch" aria-checked="true" aria-label="Screen stays on while playing"></button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="line wrap">
+          <button id="gReload" class="btn">Reload playlists from Yoto</button>
+          <button id="gSignOut" class="btn danger">Sign out</button>
+        </div>
+        <p class="p soft small">Signing out keeps your saved playlists on this device.</p>
+      </div>
+    </div>
+
+    <div id="paneInfo" class="pane" hidden>
+      <div class="panel">
+        <p class="p" style="margin-top:0">If something isn't working, tap Copy and send me the text below.</p>
+        <button id="gCopy" class="btn">Copy</button>
+        <pre id="dbg"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const VERSION = 'v1: first Travel MYO';
+// How the group pictures across the top are ordered:
+//   'yoto'   = the same order as in the Yoto app
+//   'newest' = most recently created group first
+//   'oldest' = oldest group first
+//   'name'   = A to Z
+const GROUP_ORDER = 'newest';
+
+const CONFIG = {
+  clientId: 'tpc_j3TNLEaMwAEHcDZBGtU5BZ',
+  authorizeUrl: 'https://login.yotoplay.com/authorize',
+  tokenUrl: 'https://login.yotoplay.com/oauth/token',
+  apiBase: 'https://api.yotoplay.com',
+  audience: 'https://api.yotoplay.com',
+  // View-only permissions. Nothing here can edit or delete anything.
+  scope: 'user:content:view family:library:view offline_access',
+  redirectUri: location.origin + location.pathname
+};
+
+const ICONS = {
+  heart: '<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>',
+  play:  '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>',
+  prev:  '<svg viewBox="0 0 24 24"><path d="M6 6h2.2v12H6zM19 6v12L9.5 12z"/></svg>',
+  next:  '<svg viewBox="0 0 24 24"><path d="M15.8 6H18v12h-2.2zM5 6l9.5 6L5 18z"/></svg>',
+  rew10: '<svg viewBox="0 0 24 24"><path d="M12 5a8 8 0 1 1-7.6 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 1.5v7L6.8 5z"/><text x="12" y="16.2" text-anchor="middle" font-size="7.5" font-weight="800" fill="currentColor" font-family="Inter,system-ui,sans-serif">10</text></svg>',
+  back:  '<svg viewBox="0 0 24 24"><path d="M15.5 4.5 8 12l7.5 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  close: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>'
+};
+
+const $ = (id) => document.getElementById(id);
+
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v; else e.setAttribute(k, v);
+  }
+  for (const k of kids) e.append(k);
+  return e;
+}
+
+/* ---------- storage and pure logic (unit-tested) ---------- */
+// <storage>
+const GB = 1024 * 1024 * 1024;
+const CAP_CHOICES = [0.5, 1, 2, 5, 10, 20, 50];   // "space for downloads" choices, in GB
+function capLabel(g) { return g < 1 ? Math.round(g * 1024) + ' MB' : (g >= 10 ? String(Math.round(g)) : g.toFixed(1)) + ' GB'; }
+function formatBytes(n) {
+  n = Number(n) || 0;
+  if (n < 1024) return Math.round(n) + ' B';
+  if (n < 1024 * 1024) return Math.round(n / 1024) + ' KB';
+  if (n < GB) { const m = n / (1024 * 1024); return (m >= 10 ? String(Math.round(m)) : (Math.round(m * 10) / 10).toString()) + ' MB'; }
+  return (Math.round(n / GB * 10) / 10).toFixed(1) + ' GB';
+}
+
+function store(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+function fetchStored(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+function unstore(key) { try { localStorage.removeItem(key); } catch (e) {} }
+function readJson(key, fallback) {
+  try { const v = JSON.parse(fetchStored(key)); return v == null ? fallback : v; } catch (e) { return fallback; }
+}
+function writeJson(key, val) { store(key, JSON.stringify(val)); }
+
+// Recently played (most recent first)
+const RECENT_MAX = 60;      // how many we remember (for sorting)
+const RECENT_STRIP = 8;     // how many show in the 'Recently played' row
+function getRecent() { const r = readJson('tm_recent', []); return Array.isArray(r) ? r : []; }
+function getPlayedAt() { const p = readJson('tm_playedat', {}); return p && typeof p === 'object' && !Array.isArray(p) ? p : {}; }
+function markRecent(id) {
+  const pa = getPlayedAt(); pa[id] = Date.now(); writeJson('tm_playedat', pa);
+  const r = getRecent().filter((x) => x !== id);
+  r.unshift(id);
+  writeJson('tm_recent', r.slice(0, RECENT_MAX));
+}
+
+// Favourites (list of card ids)
+function getFavs() { const f = readJson('tm_favs', []); return Array.isArray(f) ? f : []; }
+function toggleFav(id) {
+  const f = getFavs(); const i = f.indexOf(id);
+  if (i >= 0) f.splice(i, 1); else f.unshift(id);
+  writeJson('tm_favs', f);
+  return i < 0;
+}
+
+// "New" badges. We note the first time this device sees each playlist ('tm_seen': id -> time).
+// The very first run just records everything already there as old (time 0), so only later additions count.
+const MONTH = 30 * 24 * 3600 * 1000;
+function updateSeen(ids, seen, now) {
+  if (!seen || typeof seen !== 'object' || Array.isArray(seen)) {
+    const base = {}; for (const id of ids) base[id] = 0;
+    return { seen: base, firstRun: true };
+  }
+  const out = Object.assign({}, seen);
+  for (const id of ids) if (!(id in out)) out[id] = now;
+  return { seen: out, firstRun: false };
+}
+// A playlist is new if added in the last month, or since the app was last opened, whichever reaches further back.
+function newCutoff(prevOpen, now) {
+  return typeof prevOpen === 'number' && prevOpen > 0 ? Math.min(now - MONTH, prevOpen) : now - MONTH;
+}
+function newIds(seen, cutoff) {
+  const s = new Set();
+  for (const id of Object.keys(seen || {})) if (seen[id] > 0 && seen[id] > cutoff) s.add(id);
+  return s;
+}
+// Sorting the list: 'az', 'new' (newest added first) or 'recent' (last played first).
+function sortCards(list, mode, ctx) {
+  const az = (a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
+  const out = list.slice();
+  if (mode === 'new') {
+    const seen = (ctx && ctx.seen) || {};
+    const key = (c) => Math.max(seen[c.id] || 0, c.added || 0);
+    out.sort((a, b) => (key(b) - key(a)) || az(a, b));
+  } else if (mode === 'recent') {
+    // Last played first, counting only what was played in this app (not the real Yoto player).
+    const r = (ctx && ctx.recent) || [];
+    const at = (ctx && ctx.playedAt) || {};
+    const key = (c) => at[c.id] || 0;
+    const pos = (c) => { const i = r.indexOf(c.id); return i < 0 ? Infinity : i; };
+    out.sort((a, b) => (key(b) - key(a)) || (pos(a) === pos(b) ? az(a, b) : (pos(a) < pos(b) ? -1 : 1)));
+  } else out.sort(az);
+  return out;
+}
+
+// Where she was up to in each playlist: { cardId: { i: trackIndex, t: seconds, at: when } }
+function getPositions() { const p = readJson('tm_pos', {}); return p && typeof p === 'object' && !Array.isArray(p) ? p : {}; }
+function savePosition(cardId, index, time) {
+  const p = getPositions();
+  p[cardId] = { i: index, t: Math.max(0, Math.floor(time || 0)), at: Date.now() };
+  const keys = Object.keys(p);
+  if (keys.length > 120) {
+    keys.sort((a, b) => p[a].at - p[b].at);
+    for (const k of keys.slice(0, keys.length - 120)) delete p[k];
+  }
+  writeJson('tm_pos', p);
+}
+function clearPosition(cardId) {
+  const p = getPositions();
+  if (cardId in p) { delete p[cardId]; writeJson('tm_pos', p); }
+}
+
+// Saved copy of the playlist list so the app opens instantly (and works with no internet)
+function saveLibraryCache(cards) { writeJson('tm_library', { at: Date.now(), cards }); }
+function loadLibraryCache() {
+  const c = readJson('tm_library', null);
+  return c && Array.isArray(c.cards) ? c.cards.filter((x) => x && x.id && x.title) : [];
+}
+
+// Search: every typed word must appear somewhere in the title
+function matches(card, query) {
+  const t = card.title.toLowerCase();
+  return query.split(/\s+/).filter(Boolean).every((w) => t.includes(w));
+}
+
+// Saved copy of her groups
+function saveGroupsCache(groups) { writeJson('tm_groups', groups); }
+function loadGroupsCache() {
+  const g = readJson('tm_groups', []);
+  return Array.isArray(g) ? g.filter((x) => x && x.id && Array.isArray(x.ids)) : [];
+}
+
+// Which tab a library item belongs on. Anything not clearly Club content stays in "My Cards".
+function isClub(item) {
+  const c = (item && item.card) || {};
+  const bits = [item && item.reason, item && item.shareType, c.availability]
+    .filter((x) => typeof x === 'string').join(' ').toLowerCase();
+  // Club cards added by hand in the Yoto app are labelled 'user-add' (older ones 'club-subscription-add').
+  return /club|subscri|member/.test(bits) || (item && item.reason === 'user-add');
+}
+function tally(items, pick) {
+  const out = {};
+  for (const it of items) { const k = String(pick(it)); out[k] = (out[k] || 0) + 1; }
+  return out;
+}
+// Groups come back from Yoto as { id, name, imageUrl, items: [{ contentId }] }
+function groupsFrom(libGroups, listGroups) {
+  const src = Array.isArray(libGroups) && libGroups.length ? libGroups : (Array.isArray(listGroups) ? listGroups : []);
+  return src.filter((g) => g && g.id).map((g) => {
+    const ids = [];
+    for (const it of (g.items || [])) if (it && it.contentId) ids.push(it.contentId);
+    for (const c of (g.cards || [])) { const id = c && (c.cardId || c.id); if (id) ids.push(id); }
+    return { id: g.id, name: g.name || 'Group', created: Date.parse(g.createdAt) || 0, image: g.imageUrl || null, imageId: g.imageId || null, ids: Array.from(new Set(ids)) };
+  });
+}
+// Places to look for a group's picture, best first: the picture Yoto names, Yoto's ready-made group pictures,
+// and finally the cover of the first playlist inside the group.
+function groupPictureTries(g, cardsById) {
+  const out = [];
+  if (g.image) out.push({ url: g.image, from: 'picture Yoto gave' });
+  if (g.imageId && !/^https?:/.test(g.imageId)) out.push({ url: 'https://cdn.yoto.io/library/groups/' + g.imageId + '.png', from: 'Yoto ready-made picture' });
+  for (const id of (g.ids || [])) {
+    const c = cardsById.get(id);
+    if (c && c.cover) { out.push({ url: c.cover, from: 'cover of a playlist in the group' }); break; }
+  }
+  return out.filter((t, i) => out.findIndex((x) => x.url === t.url) === i);
+}
+// What to show right now: a group (from both tabs), or the open tab (null = no tab, show everything),
+// narrowed by the search words and, if given, by a set of allowed ids.
+function visibleCards(cards, groups, groupId, tab, query, allow) {
+  let list;
+  if (groupId) {
+    const g = groups.find((x) => x.id === groupId);
+    const set = new Set(g ? g.ids : []);
+    list = cards.filter((c) => set.has(c.id));
+  } else if (tab) {
+    list = cards.filter((c) => (c.kind || 'mine') === tab);
+  } else {
+    list = cards.slice();
+  }
+  if (allow) list = list.filter((c) => allow.has(c.id));
+  const q = (query || '').trim().toLowerCase();
+  return q ? list.filter((c) => matches(c, q)) : list;
+}
+
+// ----- Saved-for-offline bookkeeping -----
+// state.dl is { cardId: { at, bytes, n, updated, title, cover } } for every playlist saved on this device.
+function usedBytes(dl) { let s = 0; for (const id of Object.keys(dl || {})) s += Number(dl[id] && dl[id].bytes) || 0; return s; }
+// True when Yoto says the playlist changed after we saved it (only when both dates are known).
+function needsUpdate(card, rec) { return !!(rec && card && card.updated && rec.updated && card.updated > rec.updated + 60000); }
+function filterDownloads(list, mode, dl) {
+  if (mode === 'saved') return list.filter((c) => dl[c.id]);
+  if (mode === 'not') return list.filter((c) => !dl[c.id]);
+  if (mode === 'update') return list.filter((c) => needsUpdate(c, dl[c.id]));
+  return list;
+}
+function cleanDl(raw) {
+  const out = {};
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    for (const id of Object.keys(raw)) {
+      const r = raw[id];
+      if (r && typeof r === 'object') out[id] = { at: r.at || 0, bytes: Number(r.bytes) || 0, n: r.n || 0, updated: r.updated || 0, title: r.title || '', cover: r.cover || null };
+    }
+  }
+  return out;
+}
+// Profiles: [{ id, name, emoji, ids: [cardId...] }]
+function cleanProfiles(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((p) => p && p.id && typeof p.name === 'string')
+    .map((p) => ({ id: String(p.id), name: p.name.slice(0, 20) || 'Kid', emoji: p.emoji || '🙂', ids: Array.isArray(p.ids) ? Array.from(new Set(p.ids.filter((x) => typeof x === 'string'))) : [] }));
+}
+// Which playlists the kid may see: null = no limit, otherwise a Set of ids.
+// Combines the chosen profile's list with "only saved playlists".
+function allowedIds(profile, dl, onlyDl) {
+  let set = null;
+  if (profile) set = new Set(profile.ids);
+  if (onlyDl) {
+    const saved = new Set(Object.keys(dl || {}));
+    set = set ? new Set(Array.from(set).filter((x) => saved.has(x))) : saved;
+  }
+  return set;
+}
+// The type to give saved sound so the browser can play it back from the device.
+function audioTypeFor(serverType, format, url) {
+  const st = String(serverType || '').toLowerCase().split(';')[0].trim();
+  if (/^audio\//.test(st) || st === 'video/mp4') return st;
+  const m = String(url || '').split('?')[0].match(/\.([a-z0-9]+)$/);
+  const f = String(format || '').toLowerCase() || (m ? m[1] : '');
+  if (f === 'mp3' || f === 'mpeg') return 'audio/mpeg';
+  if (f === 'ogg' || f === 'opus') return 'audio/ogg';
+  if (f === 'wav') return 'audio/wav';
+  return 'audio/mp4';
+}
+// </storage>
+
+/* ---------- state ---------- */
+const state = {
+  cards: [], byId: new Map(), groups: [], group: null, tab: 'mine', loaded: false, groupPics: {},
+  libInfo: null, loadError: null, now: null, debug: null,
+  lastScrolledIndex: -1, lastSave: 0, query: '',
+  sort: 'az', view: 'tiles', seen: {}, fresh: new Set(), prevOpen: null, awake: true,
+  offline: false, dl: {}, dlStatus: {}, dlRunning: false, dlRun: null, dlDebug: null,
+  settings: { cap: 2 * GB, onlyDl: false, lock: true },
+  profiles: [], profileId: null, libDirty: false,
+  dlFilter: 'all', dlQuery: '', est: null, persisted: null, sw: 'not started',
+  playSeq: 0, openTok: 0, blobUrl: null, pre: null
+};
+function setCards(list) { state.cards = list; state.byId = new Map(list.map((c) => [c.id, c])); }
+
+function saveDl() { writeJson('tm_dl', state.dl); }
+function loadSettings() {
+  const cap = Number(fetchStored('tm_cap'));
+  state.settings.cap = cap > 0 ? cap : 2 * GB;
+  state.settings.onlyDl = fetchStored('tm_onlydl') === 'on';
+  state.settings.lock = fetchStored('tm_lock') !== 'off';
+  state.awake = fetchStored('tm_awake') !== 'off';
+}
+function saveProfiles() { writeJson('tm_profiles', state.profiles); }
+function currentProfile() { return state.profiles.find((p) => p.id === state.profileId) || null; }
+function onlyDlNow() { return state.settings.onlyDl || state.offline; }
+function currentAllow() { return allowedIds(currentProfile(), state.dl, onlyDlNow()); }
+function shownCards(query) {
+  const prof = currentProfile();
+  return visibleCards(state.cards, state.groups, state.group, prof ? null : state.tab, query, currentAllow());
+}
+
+/* ---------- PKCE helpers ---------- */
+// <pkce>
+function b64url(buf) {
+  let s = '';
+  const bytes = new Uint8Array(buf);
+  for (const b of bytes) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function randomString(n) {
+  const a = new Uint8Array(n);
+  crypto.getRandomValues(a);
+  return b64url(a).slice(0, n);
+}
+async function challengeFor(verifier) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+  return b64url(digest);
+}
+// </pkce>
+
+/* ---------- sign-in ---------- */
+async function startLogin() {
+  const verifier = randomString(64);
+  const st = randomString(24);
+  store('tm_verifier', verifier);
+  store('tm_state', st);
+  const params = new URLSearchParams({
+    audience: CONFIG.audience,
+    scope: CONFIG.scope,
+    response_type: 'code',
+    client_id: CONFIG.clientId,
+    code_challenge: await challengeFor(verifier),
+    code_challenge_method: 'S256',
+    redirect_uri: CONFIG.redirectUri,
+    state: st
+  });
+  location.href = CONFIG.authorizeUrl + '?' + params.toString();
+}
+
+async function handleCallback() {
+  const q = new URLSearchParams(location.search);
+  if (!q.has('code') && !q.has('error')) return;
+  const code = q.get('code');
+  const returnedState = q.get('state');
+  const errorText = q.get('error_description') || q.get('error');
+  history.replaceState({}, '', CONFIG.redirectUri);
+  if (errorText) throw new Error('Yoto said: ' + errorText);
+  const verifier = fetchStored('tm_verifier');
+  const expected = fetchStored('tm_state');
+  unstore('tm_verifier'); unstore('tm_state');
+  if (!verifier || returnedState !== expected) throw new Error('Sign-in was interrupted. Please try again.');
+  const res = await fetch(CONFIG.tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: CONFIG.clientId,
+      code_verifier: verifier,
+      code: code,
+      redirect_uri: CONFIG.redirectUri
+    })
+  });
+  if (!res.ok) throw new Error('Sign-in failed (code ' + res.status + ').');
+  saveTokens(await res.json(), null);
+}
+
+/* ---------- tokens ---------- */
+function getTokens() {
+  try { return JSON.parse(fetchStored('tm_tokens') || 'null'); } catch (e) { return null; }
+}
+function saveTokens(t, prev) {
+  store('tm_tokens', JSON.stringify({
+    access_token: t.access_token,
+    refresh_token: t.refresh_token || (prev && prev.refresh_token) || null,
+    exp: Date.now() + (t.expires_in || 600) * 1000
+  }));
+}
+let refreshing = null;
+async function refreshTokens() {
+  if (refreshing) return refreshing;
+  refreshing = (async () => {
+    const t = getTokens();
+    if (!t || !t.refresh_token) throw new Error('signin');
+    const res = await fetch(CONFIG.tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        client_id: CONFIG.clientId,
+        refresh_token: t.refresh_token
+      })
+    });
+    if (!res.ok) {
+      if ([400, 401, 403].includes(res.status)) { unstore('tm_tokens'); throw new Error('signin'); }
+      throw new Error('Could not reach Yoto (' + res.status + ').');
+    }
+    saveTokens(await res.json(), t);
+    return getTokens();
+  })();
+  try { return await refreshing; } finally { refreshing = null; }
+}
+async function api(path) {
+  let t = getTokens();
+  if (!t) throw new Error('signin');
+  if (Date.now() > t.exp - 60000) t = await refreshTokens();
+  let res = await fetch(CONFIG.apiBase + path, { headers: { Authorization: 'Bearer ' + t.access_token } });
+  if (res.status === 401) {
+    t = await refreshTokens();
+    res = await fetch(CONFIG.apiBase + path, { headers: { Authorization: 'Bearer ' + t.access_token } });
+  }
+  if (!res.ok) throw new Error('Yoto replied with code ' + res.status + '.');
+  return res.json();
+}
+
+/* ---------- screens ---------- */
+function showLogin(message) {
+  $('library').hidden = true; $('mini').hidden = true; $('player').hidden = true; $('grownups').hidden = true;
+  $('login').hidden = false;
+  $('redirectShow').textContent = CONFIG.redirectUri;
+  const e = $('loginErr');
+  e.hidden = !message; e.textContent = message || '';
+}
+function showLibrary() {
+  $('login').hidden = true; $('library').hidden = false;
+}
+function setLibraryMessage(text) {
+  const m = $('msg');
+  m.hidden = !text; m.textContent = text || '';
+}
+
+function placeholder(title) {
+  const first = Array.from((title || '').trim())[0] || '♪';
+  let sum = 0; for (const ch of title || '') sum += ch.charCodeAt(0);
+  const d = el('div', { class: 'ph' }, first.toUpperCase());
+  d.style.background = 'hsl(' + ((sum * 37) % 360) + ' 70% 82%)';
+  return d;
+}
+function artFor(card, into) {
+  into.replaceChildren();
+  if (card.cover) {
+    const img = el('img', { src: card.cover, alt: '', loading: 'lazy', draggable: 'false' });
+    // Portrait artwork fills the frame; squarer artwork is shown whole instead of being cropped.
+    img.onload = () => {
+      if (img.naturalHeight && img.naturalWidth / img.naturalHeight > 0.85) img.classList.add('wide');
+    };
+    img.onerror = () => { into.replaceChildren(placeholder(card.title)); };
+    into.append(img);
+  } else {
+    into.append(placeholder(card.title));
+  }
+}
+
+function coverOf(c) {
+  return (c && c.metadata && c.metadata.cover && c.metadata.cover.imageL) || null;
+}
+function sizeOf(c) {
+  const m = c && c.metadata && c.metadata.media;
+  return (m && Number(m.fileSize)) || 0;
+}
+
+/* ---------- library: your own playlists + purchased, club and shared cards ---------- */
+async function loadLibrary() {
+  if (!state.cards.length) setLibraryMessage('Loading playlists…');
+  const [mineRes, famRes, grpRes] = await Promise.allSettled([
+    api('/content/mine'),
+    api('/card/family/library?coverWidth=400&view=groups'),
+    api('/card/family/library/groups')
+  ]);
+  for (const r of [mineRes, famRes, grpRes]) {
+    if (r.status === 'rejected' && r.reason && r.reason.message === 'signin') throw r.reason;
+  }
+  if (mineRes.status === 'rejected' && famRes.status === 'rejected') throw mineRes.reason;
+
+  const mine = mineRes.status === 'fulfilled' ? mineRes.value : null;
+  const fam = famRes.status === 'fulfilled' ? famRes.value : null;
+
+  const byId = new Map();
+  const when = (...vals) => { for (const v of vals) { const t = typeof v === 'string' ? Date.parse(v) : NaN; if (t > 0) return t; } return 0; };
+  const add = (id, title, cover, kind, added, played, size, updated) => {
+    if (!id) return;
+    const prev = byId.get(id);
+    if (prev) {
+      if (!prev.cover && cover) prev.cover = cover;
+      if (kind === 'club') prev.kind = 'club';
+      if (!prev.added && added) prev.added = added;
+      if (played > (prev.played || 0)) prev.played = played;
+      if (!prev.size && size) prev.size = size;
+      if (updated > (prev.updated || 0)) prev.updated = updated;
+      return;
+    }
+    byId.set(id, { id, title: title || 'Untitled', cover: cover || null, kind: kind || 'mine', added: added || 0, played: played || 0, size: size || 0, updated: updated || 0 });
+  };
+  if (mine) {
+    for (const c of (mine.cards || [])) {
+      if (c.deleted) continue;
+      add(c.cardId, c.title || (c.metadata && c.metadata.title), coverOf(c), 'mine', when(c.createdAt, c.updatedAt), 0, sizeOf(c), when(c.updatedAt));
+    }
+  }
+  if (fam) {
+    for (const item of (fam.cards || [])) {
+      const c = item.card || {};
+      add(item.cardId || c.cardId, c.title, coverOf(c), isClub(item) ? 'club' : 'mine', when(item.addedAt, item.createdAt, item.dateAdded, c.createdAt), Math.max(when(item.lastPlayedAt), when(item.lastPlaybackAt)), sizeOf(c), when(c.updatedAt));
+    }
+  }
+  // Playlists saved on this device that have since left the Yoto library stay playable.
+  for (const id of Object.keys(state.dl)) {
+    if (!byId.has(id)) {
+      const r = state.dl[id];
+      byId.set(id, { id, title: r.title || 'Saved playlist', cover: r.cover || null, kind: 'mine', added: 0, played: 0, size: 0, updated: 0, gone: true });
+    }
+  }
+
+  const fresh = Array.from(byId.values())
+    .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }));
+  const famItems = fam && Array.isArray(fam.cards) ? fam.cards : [];
+  const groups = groupsFrom(fam && fam.groups, grpRes.status === 'fulfilled' ? grpRes.value : null);
+  state.libInfo = {
+    myoPlaylists: mine && mine.cards ? mine.cards.length : null,
+    myoError: mineRes.status === 'rejected' ? mineRes.reason.message : null,
+    familyLibraryItems: famItems.length,
+    familyError: famRes.status === 'rejected' ? famRes.reason.message : null,
+    groupsError: grpRes.status === 'rejected' ? grpRes.reason.message : null,
+    groupsFound: groups.length,
+    groupSizes: groups.map((g) => g.name + ': ' + g.ids.length),
+    whatYotoSendsAboutEachCard: famItems[0] ? { itemKeys: Object.keys(famItems[0]), cardKeys: Object.keys(famItems[0].card || {}), metadataKeys: Object.keys((famItems[0].card && famItems[0].card.metadata) || {}), mediaExample: (famItems[0].card && famItems[0].card.metadata && famItems[0].card.metadata.media) || null } : null,
+    cardsWithKnownSize: fresh.filter((c) => c.size).length,
+    cardsWithUpdatedDate: fresh.filter((c) => c.updated).length,
+    cardsWithAddedDate: fresh.filter((c) => c.added).length,
+    cardsWithPlayedDate: fresh.filter((c) => c.played).length,
+    inMyCards: fresh.filter((c) => c.kind !== 'club').length,
+    inScienceClub: fresh.filter((c) => c.kind === 'club').length,
+    howFamilyItemsLookedToUs: {
+      reason: tally(famItems, (i) => i.reason),
+      shareType: tally(famItems, (i) => i.shareType),
+      availability: tally(famItems, (i) => i.card && i.card.availability)
+    }
+  };
+  state.loadError = null;
+  state.loaded = true;
+  state.offline = false;
+
+  // Note which playlists are new. Only when both lists loaded, so a half-loaded library can't mislead us.
+  const prevFresh = JSON.stringify(Array.from(state.fresh));
+  if (mine && fam) {
+    const r = updateSeen(fresh.map((c) => c.id), readJson('tm_seen', null), Date.now());
+    state.seen = r.seen;
+    writeJson('tm_seen', r.seen);
+    state.libInfo.newBadges = r.firstRun ? 'first run: everything already here counts as old' : undefined;
+  }
+  state.fresh = newIds(state.seen, newCutoff(state.prevOpen, Date.now()));
+
+  // Only redraw if something actually changed, so the screen doesn't flicker after a quiet refresh.
+  const changed = JSON.stringify(fresh) !== JSON.stringify(state.cards)
+    || JSON.stringify(groups) !== JSON.stringify(state.groups)
+    || JSON.stringify(Array.from(state.fresh)) !== prevFresh
+    || !$('offlineBar').hidden;
+  setCards(fresh);
+  state.groups = groups;
+  saveLibraryCache(fresh);
+  saveGroupsCache(groups);
+  if (changed) renderLibrary();
+  updateMessage();
+  showLibrary();
+  if (!$('grownups').hidden) { paintStats(); renderDlList(); }
+}
+
+function tileFor(c) {
+  const art = el('div', { class: 'art' });
+  artFor(c, art);
+  if (state.dl[c.id] && !onlyDlNow()) art.append(el('span', { class: 'badge-dl', title: 'Saved on this device' }, '✓'));
+  const b = el('button', { class: 'tile' }, art, el('span', { class: 'name' }, c.title));
+  if (state.fresh.has(c.id)) b.append(el('span', { class: 'badge-new' }, 'NEW'));
+  const h = el('span', { class: 'fav' + (getFavs().includes(c.id) ? ' on' : ''), role: 'button', 'aria-label': 'Favourite', 'data-id': c.id });
+  h.innerHTML = ICONS.heart;
+  h.addEventListener('click', (e) => { e.stopPropagation(); e.preventDefault(); setFav(c.id); });
+  b.append(h);
+  b.addEventListener('click', () => openPlaylist(c));
+  return b;
+}
+
+function setFav(id) {
+  const on = toggleFav(id);
+  for (const h of document.querySelectorAll('.fav[data-id="' + id + '"]')) h.classList.toggle('on', on);
+  $('pFav').classList.toggle('on', !!state.now && state.now.card.id === id && on);
+  renderFavs();
+}
+function renderFavs() {
+  const q = state.query.trim();
+  const allow = currentAllow();
+  const favs = (q || state.group) ? [] : getFavs().map((id) => state.byId.get(id)).filter((c) => c && (!allow || allow.has(c.id)));
+  const strip = $('favs');
+  strip.replaceChildren();
+  for (const c of favs) strip.append(tileFor(c));
+  $('favWrap').hidden = favs.length === 0;
+}
+function renderRecent() {
+  const q = state.query.trim();
+  const allow = currentAllow();
+  const prof = currentProfile();
+  const recent = (q || state.group) ? [] : getRecent()
+    .map((id) => state.byId.get(id))
+    .filter((c) => c && (prof || (c.kind || 'mine') === state.tab) && (!allow || allow.has(c.id)))
+    .slice(0, RECENT_STRIP);
+  const strip = $('recent');
+  strip.replaceChildren();
+  for (const c of recent) strip.append(tileFor(c));
+  $('recentWrap').hidden = recent.length === 0;
+  $('allHead').hidden = recent.length === 0;
+}
+
+const signedPics = new Map();
+const PIC_CACHE = 'tm-group-pictures';
+// Group pictures need our sign-in to fetch. We keep a copy on the device so they also show with no internet.
+async function signedPicture(url) {
+  if (signedPics.has(url)) return signedPics.get(url);
+  let blob = null;
+  try {
+    let t = getTokens();
+    if (!t) throw new Error('signin');
+    if (Date.now() > t.exp - 60000) t = await refreshTokens();
+    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + t.access_token } });
+    if (!res.ok) throw new Error('picture ' + res.status);
+    blob = await res.blob();
+    try { if (typeof caches !== 'undefined') (await caches.open(PIC_CACHE)).put(url, new Response(blob.slice(0, blob.size, blob.type), { headers: { 'Content-Type': blob.type || 'image/png' } })); } catch (e) {}
+  } catch (err) {
+    try {
+      const hit = typeof caches !== 'undefined' ? await (await caches.open(PIC_CACHE)).match(url) : null;
+      if (hit) blob = await hit.blob();
+    } catch (e) {}
+    if (!blob) throw err;
+  }
+  const blobUrl = URL.createObjectURL(blob);
+  signedPics.set(url, blobUrl);
+  return blobUrl;
+}
+function renderGroups(groups) {
+  const box = $('groups');
+  box.replaceChildren();
+  const order = groups.slice();
+  if (GROUP_ORDER === 'newest') order.sort((a, b) => (b.created || 0) - (a.created || 0));
+  else if (GROUP_ORDER === 'oldest') order.sort((a, b) => (a.created || 0) - (b.created || 0));
+  else if (GROUP_ORDER === 'name') order.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  for (const g of order) {
+    const pic = el('span', { class: 'gimg' });
+    const tries = groupPictureTries(g, state.byId);
+    if (tries.length) {
+      const im = el('img', { alt: '', referrerpolicy: 'no-referrer', draggable: 'false' });
+      let n = 0;
+      const next = () => {
+        if (n < tries.length) {
+          const t = tries[n++]; im.dataset.from = t.from;
+          if (t.url.startsWith(CONFIG.apiBase)) {
+            im.dataset.from = t.from + ' (signed in)';
+            signedPicture(t.url).then((u) => { im.src = u; }, next);
+          } else im.src = t.url;
+        }
+        else { state.groupPics[g.name] = 'none of the pictures would load'; pic.replaceChildren(placeholder(g.name)); }
+      };
+      im.onload = () => { state.groupPics[g.name] = im.dataset.from; };
+      im.onerror = next;
+      pic.append(im);
+      next();
+    } else {
+      state.groupPics[g.name] = 'no picture offered';
+      pic.append(placeholder(g.name));
+    }
+    const b = el('button', { class: 'grp' + (state.group === g.id ? ' on' : '') }, pic, el('span', { class: 'gname' }, g.name));
+    b.addEventListener('click', () => {
+      state.group = state.group === g.id ? null : g.id;
+      renderChrome(); renderGrid();
+      try { window.scrollTo(0, 0); } catch (e) {}
+    });
+    box.append(b);
+  }
+  box.hidden = order.length === 0;
+}
+
+// One round button per child, plus "Everyone". Only shows once a grown-up has made a profile.
+function renderProfiles() {
+  const box = $('profiles');
+  box.replaceChildren();
+  if (!state.profiles.length) { box.hidden = true; return; }
+  const make = (id, emoji, name) => {
+    const b = el('button', { class: 'prof' + (state.profileId === id ? ' on' : ''), type: 'button' },
+      el('span', { class: 'pimg' }, emoji), el('span', { class: 'pname' }, name));
+    b.addEventListener('click', () => {
+      state.profileId = id;
+      if (id) store('tm_profile', id); else unstore('tm_profile');
+      state.group = null;
+      renderLibrary();
+      try { window.scrollTo(0, 0); } catch (e) {}
+    });
+    return b;
+  };
+  box.append(make(null, '🌈', 'Everyone'));
+  for (const p of state.profiles) box.append(make(p.id, p.emoji, p.name));
+  box.hidden = false;
+}
+
+// The parts above the grid: profiles, group pictures, the two tabs, and the "showing a group" banner.
+function renderChrome() {
+  const prof = currentProfile();
+  if (state.profileId && !prof) { state.profileId = null; unstore('tm_profile'); }
+  const allow = currentAllow();
+  const groups = currentProfile() ? [] : (allow ? state.groups.filter((g) => g.ids.some((id) => allow.has(id))) : state.groups);
+  const g = state.group ? groups.find((x) => x.id === state.group) : null;
+  if (state.group && !g) state.group = null;
+  renderProfiles();
+  renderGroups(groups);
+  const inProfile = !!currentProfile();
+  $('tabs').hidden = !!g || inProfile;
+  $('groupHead').hidden = !g;
+  if (g) $('groupName').textContent = g.name;
+  for (const b of document.querySelectorAll('.tab')) b.classList.toggle('on', b.dataset.tab === state.tab);
+  $('offlineBar').hidden = !state.offline;
+}
+
+function updateMessage() {
+  if (!state.cards.length) {
+    setLibraryMessage(state.loaded ? 'No playlists found.' : (state.offline ? 'No internet, and nothing is saved on this device yet.' : 'Loading playlists…'));
+    return;
+  }
+  const list = shownCards(state.query);
+  if (list.length) { setLibraryMessage(''); return; }
+  const q = state.query.trim();
+  const prof = currentProfile();
+  if (q) {
+    const other = state.tab === 'mine' ? 'club' : 'mine';
+    const n = (state.group || prof) ? 0 : visibleCards(state.cards, state.groups, null, other, q, currentAllow()).length;
+    setLibraryMessage(n
+      ? 'Nothing here, but ' + (n === 1 ? 'there is 1' : 'there are ' + n) + ' in ' + (other === 'club' ? 'Science Club' : 'My Cards') + '.'
+      : 'Nothing found. Try a different word.');
+  } else if (onlyDlNow() && !Object.keys(state.dl).length) {
+    setLibraryMessage('Nothing is saved on this device yet. Ask a grown-up to save some playlists while on Wi-Fi.');
+  } else if (prof) {
+    setLibraryMessage(onlyDlNow() ? 'None of ' + prof.name + "'s playlists are saved on this device." : 'No playlists chosen for ' + prof.name + ' yet.');
+  } else if (state.group) {
+    setLibraryMessage('Nothing in this group yet.');
+  } else {
+    setLibraryMessage(state.tab === 'club' ? 'Nothing in Science Club yet.' : 'Nothing here yet.');
+  }
+}
+
+function applyView() {
+  const list = state.view === 'list';
+  $('grid').classList.toggle('list', list);
+  $('viewBtn').textContent = list ? '▦ Pictures' : '☰ List';
+}
+function renderGrid() {
+  const grid = $('grid');
+  applyView();
+  grid.replaceChildren();
+  const shown = sortCards(shownCards(state.query),
+    state.sort, { recent: getRecent(), seen: state.seen, playedAt: getPlayedAt() });
+  for (const c of shown) grid.append(tileFor(c));
+  renderFavs();
+  renderRecent();
+  updateMessage();
+}
+
+function renderLibrary() { renderChrome(); renderGrid(); updateHint(); state.libDirty = false; }
+function updateHint() {
+  $('hint').hidden = !(Object.keys(state.dl).length === 0 && fetchStored('tm_hint') !== 'off' && !state.offline);
+}
+
+/* ---------- audio ---------- */
+const audio = new Audio();
+audio.preload = 'auto';
+const SILENCE = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+function unlockAudio() {
+  // iPads only allow sound that starts from a tap, so we "warm up" the player on the tap.
+  audio.src = SILENCE;
+  audio.play().catch(() => {});
+  releaseBlob();
+}
+// Sound saved on the device is played from a temporary address made from the saved file.
+function releaseBlob() { if (state.blobUrl) { const u = state.blobUrl; state.blobUrl = null; if (audio.src !== u) URL.revokeObjectURL(u); } }
+function useBlob(u) {
+  const old = state.blobUrl;
+  state.blobUrl = u;
+  audio.src = u;
+  if (old && old !== u) URL.revokeObjectURL(old);
+}
+function dropPre() {
+  if (state.pre) { state.pre.dead = true; if (state.pre.url) URL.revokeObjectURL(state.pre.url); state.pre = null; }
+}
+
+function pickUrl(o) {
+  if (!o) return null;
+  const http = /^https?:\/\//;
+  for (const k of ['signedUrl', 'playableUrl', 'audioUrl', 'url', 'trackUrl']) {
+    if (typeof o[k] === 'string' && http.test(o[k])) return o[k];
+  }
+  for (const [k, v] of Object.entries(o)) {
+    if (typeof v === 'string' && http.test(v) && !/icon/i.test(k)) return v;
+  }
+  return null;
+}
+
+function chaptersOf(data) {
+  const c = data && (data.card || data);
+  return (c && c.content && c.content.chapters) || [];
+}
+// Turns Yoto's icon values into a picture address. A track with no icon of its own uses its chapter's.
+function iconUrlFrom(d) {
+  if (!d) return null;
+  const http = /^https?:\/\//;
+  if (typeof d.iconUrl16x16 === 'string' && http.test(d.iconUrl16x16)) return d.iconUrl16x16;
+  const v = d.icon16x16;
+  if (typeof v !== 'string' || !v) return null;
+  if (http.test(v)) return v;
+  const m = v.match(/^yoto:#?(.+)$/);
+  return m ? 'https://card-content.yotoplay.com/yoto/' + m[1] : null;
+}
+function tracksFrom(data) {
+  const out = [];
+  for (const ch of chaptersOf(data)) {
+    for (const t of (ch.tracks || [])) {
+      out.push({
+        title: t.title || ch.title || 'Track',
+        url: pickUrl(t) || pickUrl(ch),
+        icon: iconUrlFrom(t.display) || iconUrlFrom(ch.display),
+        format: t.format || ch.format || null,
+        size: Number(t.fileSize) || 0
+      });
+    }
+  }
+  return out;
+}
+function sampleFrom(data) {
+  const ch = chaptersOf(data)[0];
+  return ch ? { chapterKeys: Object.keys(ch), firstTrack: (ch.tracks || [])[0] || null } : null;
+}
+const hasAudio = (t) => (t.local ? t.bytes > 0 : !!t.url);
+
+// Tries your own-content route first, then the general card route (used by purchased/shared cards).
+async function fetchTracks(card) {
+  const id = encodeURIComponent(card.id);
+  const q = '?playable=true&signingType=s3&timezone=' + encodeURIComponent('Pacific/Auckland');
+  const paths = ['/content/' + id + q, '/card/' + id + q];
+  const attempts = [];
+  let best = null, lastErr = null, sample = null;
+  for (const path of paths) {
+    const label = path.split('?')[0].replace(id, '{id}');
+    try {
+      const data = await api(path);
+      const tracks = tracksFrom(data);
+      if (!sample) sample = sampleFrom(data);
+      attempts.push({
+        call: label,
+        tracks: tracks.length,
+        withAudioLink: tracks.filter((t) => t.url).length,
+        withIcon: tracks.filter((t) => t.icon).length,
+        firstIcon: tracks[0] ? tracks[0].icon : null
+      });
+      if (tracks.some((t) => t.url)) { best = tracks; break; }
+    } catch (e) {
+      if (e.message === 'signin') throw e;
+      lastErr = e;
+      attempts.push({ call: label, error: e.message });
+    }
+  }
+  state.debug = { playlist: card.title, attempts, sample };
+  if (best) return best;
+  if (attempts.some((a) => a.tracks > 0)) throw new Error('nourl');
+  if (attempts.some((a) => a.tracks === 0)) throw new Error('empty');
+  throw lastErr || new Error('nourl');
+}
+
+// Remember where she is, so reopening a story carries on from there.
+function saveNow() {
+  const n = state.now;
+  if (!n || n.done || audio.src.startsWith('data:') || !(audio.currentTime > 0)) return;
+  savePosition(n.card.id, n.index, audio.currentTime);
+}
+
+/* ---------- saving playlists on this device ---------- */
+const DL_CACHE = 'tm-downloads';
+// Saved files live in the browser's cache storage under made-up addresses like  /__tm__/<playlist>/t0
+const dlKey = (id, part) => location.origin + '/__tm__/' + encodeURIComponent(id) + '/' + part;
+const dlStore = () => caches.open(DL_CACHE);
+async function readMeta(id) {
+  const r = await (await dlStore()).match(dlKey(id, 'meta'));
+  return r ? r.json() : null;
+}
+async function localTrackUrl(id, i) {
+  const r = await (await dlStore()).match(dlKey(id, 't' + i));
+  if (!r) throw new Error('missing');
+  return URL.createObjectURL(await r.blob());
+}
+async function removeFiles(id) {
+  const c = await dlStore();
+  const prefix = dlKey(id, '');
+  for (const k of await c.keys()) if (k.url.startsWith(prefix)) await c.delete(k);
+}
+// At start-up: forget saved playlists whose files have gone (the browser can clear them), and tidy stray files.
+async function reconcileDownloads() {
+  if (typeof caches === 'undefined') return;
+  const c = await dlStore();
+  const keys = await c.keys();
+  const have = new Set(keys.map((k) => k.url));
+  let changed = false;
+  for (const id of Object.keys(state.dl)) {
+    if (!have.has(dlKey(id, 'meta'))) { delete state.dl[id]; changed = true; }
+  }
+  for (const k of keys) {
+    const m = k.url.match(/\/__tm__\/([^/]+)\//);
+    if (m && !state.dl[decodeURIComponent(m[1])]) await c.delete(k);
+  }
+  if (changed) saveDl();
+}
+
+async function fetchBlob(url, onFrac, signal) {
+  const res = await fetch(url, { signal, credentials: 'omit' });
+  if (!res.ok) throw new Error('The sound file could not be fetched (code ' + res.status + ').');
+  const type = res.headers.get('content-type') || '';
+  const len = Number(res.headers.get('content-length')) || 0;
+  if (!res.body || !res.body.getReader) { const b = await res.blob(); onFrac(1); return { blob: b, type }; }
+  const reader = res.body.getReader();
+  const parts = []; let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    parts.push(value); got += value.length;
+    if (len) onFrac(Math.min(1, got / len));
+  }
+  onFrac(1);
+  return { blob: new Blob(parts, { type }), type };
+}
+// Asks the browser to fetch each little picture once, so the helper file keeps a copy for offline use.
+function preloadImages(urls, ms = 15000) {
+  const list = Array.from(new Set(urls.filter(Boolean)));
+  return Promise.all(list.map((u) => new Promise((resolve) => {
+    const im = new Image();
+    const done = () => resolve();
+    im.onload = done; im.onerror = done;
+    setTimeout(done, ms);
+    im.src = u;
+  })));
+}
+
+async function downloadPlaylist(card, job) {
+  const tracks = await fetchTracks(card);
+  if (!tracks.some((t) => t.url)) throw new Error('nourl');
+  await removeFiles(card.id);
+  delete state.dl[card.id]; saveDl();
+  const room = state.settings.cap - usedBytes(state.dl);
+  const declared = tracks.reduce((s, t) => s + (t.size || 0), 0);
+  if (declared && declared > room) throw new Error('space');
+  const cache = await dlStore();
+  const metaTracks = [];
+  let total = 0;
+  try {
+    for (let i = 0; i < tracks.length; i++) {
+      const t = tracks[i];
+      if (!t.url) { metaTracks.push({ title: t.title, icon: t.icon, bytes: 0, type: null }); continue; }
+      state.dlDebug = { playlist: card.title, step: 'downloading track ' + (i + 1) + ' of ' + tracks.length, audioHost: (() => { try { return new URL(t.url).host; } catch (e) { return '?'; } })(), online: navigator.onLine };
+      const got = await fetchBlob(t.url, (f) => job.progress((i + f) / tracks.length), job.abort.signal);
+      if (total + got.blob.size > room) throw new Error('space');
+      const type = audioTypeFor(got.type, t.format, t.url);
+      await cache.put(dlKey(card.id, 't' + i), new Response(got.blob, { headers: { 'Content-Type': type } }));
+      total += got.blob.size;
+      metaTracks.push({ title: t.title, icon: t.icon, bytes: got.blob.size, type });
+    }
+    await preloadImages([card.cover].concat(tracks.map((t) => t.icon)));
+    if (job.abort.signal.aborted) throw new Error('cancelled');
+    // The "meta" file goes in last: if it's there, the whole playlist is.
+    await cache.put(dlKey(card.id, 'meta'), new Response(JSON.stringify({ id: card.id, title: card.title, cover: card.cover, tracks: metaTracks }), { headers: { 'Content-Type': 'application/json' } }));
+  } catch (e) {
+    try { await removeFiles(card.id); } catch (e2) {}
+    throw e;
+  }
+  state.dl[card.id] = { at: Date.now(), bytes: total, n: tracks.length, updated: card.updated || 0, title: card.title, cover: card.cover || null };
+  saveDl();
+  state.dlDebug = { playlist: card.title, step: 'finished', bytes: total, online: navigator.onLine };
+}
+
+function humanDlError(e) {
+  const m = e && e.message;
+  if (m === 'space') return 'Not enough space set aside. Choose a bigger amount above, or remove something.';
+  if (m === 'signin') return 'Please sign in again.';
+  if (m === 'nourl' || m === 'empty') return "Yoto didn't give a download link for this one.";
+  if (e && e.name === 'QuotaExceededError') return 'This device is full.';
+  if (e instanceof TypeError) return navigator.onLine === false ? 'No internet.' : "Couldn't download. Check the Wi-Fi and try again.";
+  return m || 'Something went wrong.';
+}
+
+const rowEls = new Map();
+const dlQueue = [];
+function enqueueDownload(card) {
+  if (state.dlStatus[card.id] && state.dlStatus[card.id].s !== 'error') return;
+  const job = { s: 'queued', p: 0, msg: '', abort: new AbortController() };
+  job.progress = (p) => {
+    if (Math.abs(p - job.p) >= 0.01 || p >= 1) { job.p = p; paintRow(card.id); }
+  };
+  state.dlStatus[card.id] = job;
+  dlQueue.push(card.id);
+  if (!state.dlRun) state.dlRun = { total: 0, done: 0, ok: 0, failed: 0 };
+  state.dlRun.total++;
+  paintRow(card.id); paintBanner();
+  try { if (navigator.storage && navigator.storage.persist && state.persisted == null) navigator.storage.persist().then((ok) => { state.persisted = ok; paintStats(); }, () => {}); } catch (e) {}
+  pump();
+}
+function cancelDownload(id) {
+  const job = state.dlStatus[id];
+  if (!job) return;
+  job.abort.abort();
+  const i = dlQueue.indexOf(id);
+  if (i >= 0) { dlQueue.splice(i, 1); if (state.dlRun) state.dlRun.total = Math.max(state.dlRun.done, state.dlRun.total - 1); delete state.dlStatus[id]; }
+  paintRow(id); paintBanner();
+}
+async function pump() {
+  if (state.dlRunning) return;
+  state.dlRunning = true; syncAwake();
+  while (dlQueue.length) {
+    const id = dlQueue.shift();
+    const job = state.dlStatus[id], card = state.byId.get(id);
+    if (!job || !card) { delete state.dlStatus[id]; continue; }
+    job.s = 'active'; paintRow(id); paintBanner();
+    try {
+      await downloadPlaylist(card, job);
+      delete state.dlStatus[id];
+      state.dlRun.ok++;
+    } catch (e) {
+      if (e.message === 'cancelled' || job.abort.signal.aborted) { delete state.dlStatus[id]; if (state.dlRun) state.dlRun.total = Math.max(state.dlRun.done, state.dlRun.total - 1); continue; }
+      job.s = 'error'; job.msg = humanDlError(e); state.dlRun.failed++;
+      state.dlDebug = Object.assign({}, state.dlDebug, { error: e && e.message, errorName: e && e.name, playlist: card.title, online: navigator.onLine });
+      // Out of space, no internet or signed out: carrying on would only fail the same way.
+      if (['space', 'signin'].includes(e.message) || e instanceof TypeError) {
+        for (const rest of dlQueue.splice(0)) {
+          const j = state.dlStatus[rest];
+          if (j) { j.s = 'error'; j.msg = e.message === 'space' ? 'Stopped: no space left.' : 'Stopped: ' + humanDlError(e); }
+          state.dlRun.failed++; state.dlRun.done++; paintRow(rest);
+        }
+      }
+    }
+    state.dlRun.done++;
+    state.libDirty = true;
+    paintRow(id); paintStats(); paintBanner();
+  }
+  state.dlRunning = false; syncAwake(); paintBanner();
+}
+async function removeDownload(id) {
+  try { await removeFiles(id); } catch (e) {}
+  delete state.dl[id]; saveDl();
+  state.libDirty = true;
+  paintRow(id); paintStats();
+}
+function toggleDownload(c) {
+  const job = state.dlStatus[c.id];
+  if (job && (job.s === 'active' || job.s === 'queued')) cancelDownload(c.id);
+  else if (job && job.s === 'error') { delete state.dlStatus[c.id]; enqueueDownload(c); }
+  else if (state.dl[c.id]) removeDownload(c.id);
+  else enqueueDownload(c);
+}
+
+/* ---------- grown-ups corner: downloads screen ---------- */
+function rowState(c) {
+  const job = state.dlStatus[c.id], rec = state.dl[c.id];
+  if (job && job.s === 'active') return { sub: 'Downloading ' + Math.round(job.p * 100) + '%', prog: job.p, on: true };
+  if (job && job.s === 'queued') return { sub: 'Waiting…', prog: 0, on: true };
+  if (job && job.s === 'error') return { sub: job.msg, cls: 'bad', on: false };
+  if (rec) {
+    const upd = needsUpdate(c, rec);
+    const bits = [formatBytes(rec.bytes), upd ? 'A newer version is on Yoto' : 'Saved'];
+    if (c.gone) bits.push('no longer in your Yoto library');
+    return { sub: bits.join(' · '), cls: upd ? 'upd' : '', on: true, upd };
+  }
+  return { sub: c.size ? 'About ' + formatBytes(c.size) : 'Not saved', on: false };
+}
+function makeRow(c) {
+  const thumb = el('div', { class: 'thumb' }); artFor(c, thumb);
+  const s = el('div', { class: 's' });
+  const bar = el('div', { class: 'pbar' }, el('i'));
+  const info = el('div', { class: 'info' }, el('div', { class: 't' }, c.title), s, bar);
+  const upd = el('button', { class: 'btn mini', type: 'button' }, 'Update');
+  const sw = el('button', { class: 'sw', role: 'switch', type: 'button', 'aria-label': 'Save ' + c.title + ' on this device', 'aria-checked': 'false' });
+  const li = el('li', { class: 'drow' }, thumb, info, upd, sw);
+  sw.addEventListener('click', () => toggleDownload(c));
+  upd.addEventListener('click', () => { if (!state.dlStatus[c.id]) enqueueDownload(c); });
+  rowEls.set(c.id, { li, s, bar, sw, upd });
+  paintRow(c.id);
+  return li;
+}
+function paintRow(id) {
+  const r = rowEls.get(id), c = state.byId.get(id);
+  if (!r || !c) return;
+  const st = rowState(c);
+  r.s.textContent = st.sub; r.s.className = 's' + (st.cls ? ' ' + st.cls : '');
+  r.bar.hidden = !(state.dlStatus[id] && state.dlStatus[id].s === 'active');
+  r.bar.firstChild.style.width = Math.round((st.prog || 0) * 100) + '%';
+  r.sw.setAttribute('aria-checked', st.on ? 'true' : 'false');
+  r.upd.hidden = !st.upd || !!state.dlStatus[id];
+}
+function dlListed() {
+  const q = state.dlQuery.trim().toLowerCase();
+  const base = q ? state.cards.filter((c) => matches(c, q)) : state.cards;
+  return filterDownloads(base, state.dlFilter, state.dl);
+}
+function renderDlList() {
+  const ul = $('dlList');
+  ul.replaceChildren(); rowEls.clear();
+  const list = dlListed();
+  for (const c of list) ul.append(makeRow(c));
+  if (!list.length) ul.append(el('li', { class: 'soft' }, state.cards.length ? 'Nothing matches.' : 'Your playlists will show here once they have loaded.'));
+}
+function paintBanner() {
+  const b = $('dlBanner'), r = state.dlRun;
+  if (!r) { b.hidden = true; return; }
+  if (state.dlRunning || dlQueue.length) {
+    b.textContent = 'Downloading playlist ' + Math.min(r.done + 1, r.total) + ' of ' + r.total + '… keep this screen open.';
+  } else {
+    b.textContent = 'Finished. ' + r.ok + ' saved' + (r.failed ? ', ' + r.failed + ' had a problem (see the red notes below).' : '.');
+    state.dlRun = null; state.dlDone = b.textContent;
+  }
+  b.hidden = false;
+}
+async function refreshEstimate() {
+  try { if (navigator.storage && navigator.storage.estimate) state.est = await navigator.storage.estimate(); } catch (e) {}
+  paintDevice();
+}
+function paintDevice() {
+  const e = state.est;
+  $('devUse').textContent = e && e.quota
+    ? 'Travel MYO is using ' + formatBytes(e.usage || 0) + ' on this device, with about ' + formatBytes(Math.max(0, e.quota - (e.usage || 0))) + ' more available.'
+    : '';
+}
+function paintStats() {
+  const used = usedBytes(state.dl), cap = state.settings.cap;
+  $('meterBar').style.width = Math.min(100, cap ? used / cap * 100 : 0) + '%';
+  $('meter').classList.toggle('over', used > cap);
+  $('dlUse').textContent = used > cap
+    ? 'Downloads use ' + formatBytes(used) + ', which is more than the ' + capLabel(cap / GB) + ' set aside. Remove some, or choose more space.'
+    : 'Downloads use ' + formatBytes(used) + ' of the ' + capLabel(cap / GB) + ' set aside.';
+  $('persistNote').textContent = state.persisted
+    ? '✓ This device has agreed to keep your downloads.'
+    : 'Tip: on an iPad or iPhone, open Travel MYO from its Home Screen icon (Share, then Add to Home Screen). Safari can otherwise clear saved playlists after a week without use.';
+  paintDevice();
+  if (state.dlDone && !state.dlRun) { $('dlBanner').textContent = state.dlDone; $('dlBanner').hidden = false; }
+  refreshEstimate();
+}
+function buildCapSelect() {
+  const sel = $('capSel');
+  sel.replaceChildren();
+  const vals = CAP_CHOICES.slice();
+  const cur = state.settings.cap / GB;
+  if (!vals.includes(cur)) vals.push(cur), vals.sort((a, b) => a - b);
+  for (const g of vals) sel.append(el('option', { value: String(g * GB) }, capLabel(g)));
+  sel.value = String(state.settings.cap);
+}
+async function downloadAll() {
+  const todo = dlListed().filter((c) => !state.dlStatus[c.id] && (!state.dl[c.id] || needsUpdate(c, state.dl[c.id])));
+  if (!todo.length) { alert('Everything shown is already saved.'); return; }
+  const known = todo.reduce((s, c) => s + (c.size || 0), 0);
+  let msg = 'Save ' + todo.length + ' playlist' + (todo.length === 1 ? '' : 's') + ' on this device?' + (known ? ' (about ' + formatBytes(known) + ')' : '');
+  msg += '\n\nUse Wi-Fi and keep this screen open until it finishes.';
+  if (known > state.settings.cap - usedBytes(state.dl)) msg += '\n\nThat is more than the space left, so it will stop when the space runs out.';
+  if (!confirm(msg)) return;
+  for (const c of todo) { if (state.dlStatus[c.id]) delete state.dlStatus[c.id]; enqueueDownload(c); }
+}
+async function removeAll() {
+  const gone = dlListed().filter((c) => state.dl[c.id] || state.dlStatus[c.id]);
+  if (!gone.length) { alert('Nothing shown is saved.'); return; }
+  if (!confirm('Remove ' + gone.length + ' saved playlist' + (gone.length === 1 ? '' : 's') + ' from this device? You can download them again.')) return;
+  for (const c of gone) { if (state.dlStatus[c.id]) cancelDownload(c.id); if (state.dl[c.id]) await removeDownload(c.id); }
+}
+
+/* ---------- grown-ups corner: profiles ---------- */
+const EMOJIS = ['🦊', '🐼', '🐯', '🦄', '🐸', '🐙', '🚀', '🌈', '⭐', '🐶', '🐱', '🦖'];
+let pf = null;   // the profile being edited: { id, name, emoji, ids: Set, isNew }
+function renderProfList() {
+  const ul = $('profList');
+  ul.replaceChildren();
+  if (!state.profiles.length) ul.append(el('li', { class: 'soft' }, 'No profiles yet.'));
+  for (const p of state.profiles) {
+    const edit = el('button', { class: 'btn mini', type: 'button' }, 'Edit');
+    edit.addEventListener('click', () => openProfEdit(p));
+    ul.append(el('li', { class: 'drow' }, el('span', { class: 'em' }, p.emoji),
+      el('div', { class: 'info' }, el('div', { class: 't' }, p.name), el('div', { class: 's' }, p.ids.length + ' playlist' + (p.ids.length === 1 ? '' : 's'))), edit));
+  }
+}
+function openProfEdit(p) {
+  pf = p ? { id: p.id, name: p.name, emoji: p.emoji, ids: new Set(p.ids), isNew: false }
+         : { id: 'p' + Date.now().toString(36), name: '', emoji: EMOJIS[state.profiles.length % EMOJIS.length], ids: new Set(), isNew: true };
+  $('pfName').value = pf.name;
+  $('pfSearch').value = '';
+  $('pfDelete').hidden = pf.isNew;
+  const box = $('pfEmoji');
+  box.replaceChildren();
+  for (const e of EMOJIS) {
+    const b = el('button', { type: 'button', class: e === pf.emoji ? 'on' : '' }, e);
+    b.addEventListener('click', () => { pf.emoji = e; for (const x of box.children) x.classList.toggle('on', x === b); });
+    box.append(b);
+  }
+  $('profView').hidden = true; $('profEdit').hidden = false;
+  renderPick();
+  $('grownups').scrollTop = 0;
+}
+function pickShown() {
+  const q = $('pfSearch').value.trim().toLowerCase();
+  return q ? state.cards.filter((c) => matches(c, q)) : state.cards;
+}
+function renderPick() {
+  const ul = $('pfList');
+  ul.replaceChildren();
+  for (const c of pickShown()) {
+    const cb = el('input', { type: 'checkbox', 'aria-label': c.title });
+    cb.checked = pf.ids.has(c.id);
+    cb.addEventListener('change', () => { if (cb.checked) pf.ids.add(c.id); else pf.ids.delete(c.id); paintPickCount(); });
+    const thumb = el('div', { class: 'thumb' }); artFor(c, thumb);
+    const s = el('div', { class: 's' }, state.dl[c.id] ? '✓ Saved on this device' : '');
+    const row = el('label', { class: 'pick' }, cb, thumb, el('div', { class: 'info' }, el('div', { class: 't' }, c.title), s));
+    row.className = 'pick drow';
+    ul.append(el('li', {}, row));
+  }
+  paintPickCount();
+}
+function paintPickCount() { $('pfCount').textContent = pf.ids.size + ' playlist' + (pf.ids.size === 1 ? '' : 's') + ' chosen'; }
+function saveProfile() {
+  const name = $('pfName').value.trim() || 'Kid ' + (state.profiles.length + (pf.isNew ? 1 : 0));
+  const rec = { id: pf.id, name: name.slice(0, 20), emoji: pf.emoji, ids: Array.from(pf.ids) };
+  const i = state.profiles.findIndex((p) => p.id === pf.id);
+  if (i >= 0) state.profiles[i] = rec; else state.profiles.push(rec);
+  saveProfiles(); state.libDirty = true; closeProfEdit();
+}
+function deleteProfile() {
+  if (!confirm('Delete this profile? The playlists themselves are not touched.')) return;
+  state.profiles = state.profiles.filter((p) => p.id !== pf.id);
+  if (state.profileId === pf.id) { state.profileId = null; unstore('tm_profile'); }
+  saveProfiles(); state.libDirty = true; closeProfEdit();
+}
+function closeProfEdit() { pf = null; $('profEdit').hidden = true; $('profView').hidden = false; renderProfList(); }
+
+/* ---------- maths question + grown-ups corner ---------- */
+let lockCb = null, lockAns = 0;
+function askLock(cb, note) {
+  if (!state.settings.lock) { cb(); return; }
+  const a = 3 + Math.floor(Math.random() * 7), b = 3 + Math.floor(Math.random() * 7);
+  lockAns = a * b; lockCb = cb;
+  $('lockQ').textContent = a + ' × ' + b + ' = ?';
+  $('lockA').value = ''; $('lockMsg').textContent = note || '';
+  $('lock').hidden = false;
+  setTimeout(() => { try { $('lockA').focus(); } catch (e) {} }, 60);
+}
+function lockSubmit() {
+  if (Number($('lockA').value.trim()) === lockAns && $('lockA').value.trim() !== '') {
+    $('lock').hidden = true;
+    const cb = lockCb; lockCb = null;
+    if (cb) cb();
+  } else {
+    askLock(lockCb, 'Not quite. Here is a new one.');
+  }
+}
+
+function swPaint() {
+  $('swOnlyDl').setAttribute('aria-checked', state.settings.onlyDl ? 'true' : 'false');
+  $('swLock').setAttribute('aria-checked', state.settings.lock ? 'true' : 'false');
+  $('swAwake').setAttribute('aria-checked', state.awake ? 'true' : 'false');
+}
+function showPane(name) {
+  for (const b of document.querySelectorAll('.gtab')) b.classList.toggle('on', b.dataset.pane === name);
+  for (const p of ['downloads', 'profiles', 'settings', 'info']) $('pane' + p[0].toUpperCase() + p.slice(1)).hidden = p !== name;
+  if (name === 'downloads') { paintStats(); renderDlList(); paintBanner(); }
+  if (name === 'profiles') { closeProfEdit(); }
+  if (name === 'settings') swPaint();
+  if (name === 'info') $('dbg').textContent = JSON.stringify(gatherInfo(), truncating, 2);
+  $('grownups').scrollTop = 0;
+}
+function truncating(key, value) {
+  return (typeof value === 'string' && value.length > 70) ? value.slice(0, 50) + '…[cut]' : value;
+}
+function gatherInfo() {
+  return {
+    version: VERSION,
+    callbackUsed: CONFIG.redirectUri,
+    offlineHelperFile: state.sw,
+    online: navigator.onLine, treatedAsOffline: state.offline,
+    deviceKeepsDownloads: state.persisted,
+    deviceStorage: state.est ? { using: formatBytes(state.est.usage), quota: formatBytes(state.est.quota) } : null,
+    savedPlaylists: Object.keys(state.dl).length,
+    savedBytes: formatBytes(usedBytes(state.dl)),
+    spaceSetAside: formatBytes(state.settings.cap),
+    profiles: state.profiles.map((p) => p.name + ': ' + p.ids.length),
+    lastDownload: state.dlDebug,
+    library: state.libInfo,
+    lastLoadError: state.loadError,
+    groupPictures: state.groupPics,
+    playlistsOnScreen: state.cards.length,
+    playlistsWithSavedPlace: Object.keys(getPositions()).length,
+    lastPlaylistOpened: state.debug
+  };
+}
+function openGrownups() {
+  buildCapSelect();
+  $('grownups').hidden = false;
+  showPane('downloads');
+}
+function closeGrownups() {
+  $('grownups').hidden = true;
+  if (state.libDirty) renderLibrary();
+  updateHint();
+}
+function setupLongPress() {
+  let timer = null;
+  const h = $('title');
+  h.addEventListener('pointerdown', () => { timer = setTimeout(() => askLock(openGrownups), 2000); });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) {
+    h.addEventListener(ev, () => clearTimeout(timer));
+  }
+  h.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
+/* ---------- playing ---------- */
+async function localTracks(card) {
+  const meta = await readMeta(card.id);
+  if (!meta || !Array.isArray(meta.tracks) || !meta.tracks.length) return null;
+  return meta.tracks.map((t, i) => ({ title: t.title || 'Track', icon: t.icon || null, local: true, idx: i, bytes: t.bytes || 0, url: null }));
+}
+
+async function openPlaylist(card) {
+  if (state.now && state.now.card.id === card.id) { showPlayer(); return; }
+  saveNow();
+  unlockAudio();
+  markRecent(card.id);
+  renderRecent();
+  const tok = ++state.openTok;
+  state.now = null;
+  state.lastScrolledIndex = -1;
+  state.playSeq++;
+  dropPre();
+  renderPlayer(card, null);
+  showPlayer();
+  try {
+    let tracks = null, local = false;
+    // A saved copy is always preferred: it works anywhere and never has links that run out.
+    if (state.dl[card.id] && typeof caches !== 'undefined') {
+      try { tracks = await localTracks(card); local = !!tracks; } catch (e) { tracks = null; }
+    }
+    if (!tracks) tracks = await fetchTracks(card);
+    if (tok !== state.openTok) return;
+    if (!tracks.length) throw new Error('empty');
+    let startIndex = 0, startTime = 0;
+    const pos = getPositions()[card.id];
+    if (pos && Number.isInteger(pos.i) && pos.i >= 0 && pos.i < tracks.length) {
+      startIndex = pos.i;
+      startTime = pos.t > 5 ? pos.t - 2 : 0; // back up a couple of seconds to catch the thread
+    }
+    state.now = { card, tracks, local, index: startIndex, done: false, failedIndex: null, retrying: false, pendingSeek: null };
+    renderPlayer(card, state.now);
+    playIndex(startIndex, startTime);
+  } catch (e) {
+    if (tok !== state.openTok) return;
+    if (e.message === 'signin') { hidePlayer(); showLogin('Please sign in again.'); return; }
+    $('pmsg').textContent = e.message === 'empty'
+      ? 'This one is empty.'
+      : (e instanceof TypeError
+        ? 'No internet, and this one is not saved on this device. Ask a grown-up to save it first.'
+        : 'Hmm, this one will not play. Please ask a grown-up.');
+    $('ptrack').textContent = '';
+  }
+}
+
+function playIndex(i, seekTo = 0) {
+  const n = state.now;
+  if (!n || i < 0 || i >= n.tracks.length) return;
+  n.index = i; n.done = false;
+  const t = n.tracks[i];
+  if (!hasAudio(t)) { if (i + 1 < n.tracks.length) playIndex(i + 1); return; }
+  n.pendingSeek = seekTo > 0 ? seekTo : null;
+  state.lastSave = Date.now();
+  savePosition(n.card.id, i, seekTo);
+  const seq = ++state.playSeq;
+  if (t.local) {
+    const key = n.card.id + ':' + i;
+    if (state.pre && state.pre.key === key && state.pre.url) {
+      // The next track was already made ready while the last one played, so there's no gap.
+      const u = state.pre.url; state.pre = null;
+      useBlob(u); audio.play().catch(() => {}); prepNext();
+    } else {
+      dropPre();
+      localTrackUrl(n.card.id, t.idx).then((u) => {
+        if (seq !== state.playSeq) { URL.revokeObjectURL(u); return; }
+        useBlob(u); audio.play().catch(() => {}); prepNext();
+      }, () => { $('pmsg').textContent = 'This saved playlist looks damaged. Ask a grown-up to download it again.'; });
+    }
+  } else {
+    dropPre();
+    audio.src = t.url;
+    releaseBlob();
+    audio.play().catch(() => {});
+  }
+  updateUI();
+  setMediaSession();
+}
+// Gets the next saved track ready in the background so playlists carry on smoothly, even with the screen off.
+function prepNext() {
+  const n = state.now;
+  if (!n || !n.local) return;
+  let j = n.index + 1;
+  while (j < n.tracks.length && !hasAudio(n.tracks[j])) j++;
+  if (j >= n.tracks.length) return;
+  const key = n.card.id + ':' + j;
+  if (state.pre && state.pre.key === key) return;
+  dropPre();
+  const mine = { key, url: null, dead: false };
+  state.pre = mine;
+  localTrackUrl(n.card.id, n.tracks[j].idx).then((u) => { if (mine.dead) URL.revokeObjectURL(u); else mine.url = u; }, () => {});
+}
+
+function togglePlay() {
+  const n = state.now;
+  if (!n) return;
+  if (n.done) { playIndex(0); return; }
+  if (audio.paused) audio.play().catch(() => {}); else audio.pause();
+}
+function goNext() { const n = state.now; if (n && n.index + 1 < n.tracks.length) playIndex(n.index + 1); }
+function rewind10() {
+  if (!state.now || !audio.src) return;
+  audio.currentTime = Math.max(0, (audio.currentTime || 0) - 10);
+}
+function goPrev() {
+  const n = state.now; if (!n) return;
+  if (audio.currentTime > 3 || n.index === 0) { audio.currentTime = 0; audio.play().catch(() => {}); }
+  else playIndex(n.index - 1);
+}
+
+audio.addEventListener('play', updateUI);
+audio.addEventListener('pause', () => { saveNow(); updateUI(); });
+audio.addEventListener('playing', () => { if (state.now) state.now.failedIndex = null; $('pmsg').textContent = ''; updateUI(); });
+audio.addEventListener('loadedmetadata', () => {
+  const n = state.now;
+  if (n && n.pendingSeek != null) {
+    const t = n.pendingSeek;
+    n.pendingSeek = null;
+    if (isFinite(audio.duration) && t < audio.duration - 5) { try { audio.currentTime = t; } catch (e) {} }
+  }
+});
+audio.addEventListener('timeupdate', () => {
+  const d = audio.duration;
+  $('pbar').style.width = (d && isFinite(d) ? Math.min(100, (audio.currentTime / d) * 100) : 0) + '%';
+  const now = Date.now();
+  if (now - state.lastSave > 5000 && !audio.paused) { state.lastSave = now; saveNow(); }
+});
+audio.addEventListener('ended', () => {
+  const n = state.now; if (!n) return;
+  if (n.index + 1 < n.tracks.length) playIndex(n.index + 1);
+  else { n.done = true; clearPosition(n.card.id); updateUI(); }
+});
+audio.addEventListener('error', async () => {
+  const n = state.now;
+  if (!n || n.retrying || audio.src.startsWith('data:') || !audio.getAttribute('src')) return;
+  if (n.local) { $('pmsg').textContent = 'Oops, that one will not play. Ask a grown-up to download it again.'; return; }
+  if (n.failedIndex === n.index) { $('pmsg').textContent = 'Oops, that one will not play. Please ask a grown-up.'; return; }
+  n.failedIndex = n.index; n.retrying = true;
+  const resumeAt = audio.currentTime || 0;
+  try {
+    n.tracks = await fetchTracks(n.card); // fresh links in case the old ones expired
+    n.retrying = false;
+    playIndex(n.index, resumeAt);
+  } catch (e) {
+    n.retrying = false;
+    $('pmsg').textContent = e instanceof TypeError
+      ? 'The internet dropped out. Saved playlists will still play.'
+      : 'Oops, that one will not play. Please ask a grown-up.';
+  }
+});
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveNow(); });
+window.addEventListener('pagehide', saveNow);
+
+function setMediaSession() {
+  try {
+    const n = state.now;
+    if (!('mediaSession' in navigator) || !n) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: n.tracks[n.index].title,
+      artist: n.card.title,
+      album: n.card.title,
+      artwork: n.card.cover ? [{ src: n.card.cover }] : []
+    });
+    navigator.mediaSession.setActionHandler('play', () => audio.play());
+    navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+    navigator.mediaSession.setActionHandler('previoustrack', goPrev);
+    navigator.mediaSession.setActionHandler('seekbackward', rewind10);
+    navigator.mediaSession.setActionHandler('nexttrack', goNext);
+  } catch (e) {}
+}
+
+/* ---------- player screen ---------- */
+function renderPlayer(card, n) {
+  artFor(card, $('pcover'));
+  $('ptitle').textContent = card.title;
+  $('ptrack').textContent = n ? '' : 'Getting ready…';
+  $('pmsg').textContent = '';
+  $('pbar').style.width = '0%';
+  const list = $('tracks');
+  list.replaceChildren();
+  list.scrollTop = 0;
+  if (n) {
+    n.tracks.forEach((t, i) => {
+      // Show the track's little picture; if it can't be loaded, fall back to the track number.
+      const badge = el('span', { class: 'num' }, String(i + 1));
+      let lead = badge;
+      if (t.icon) {
+        const img = el('img', { src: t.icon, alt: '', draggable: 'false' });
+        lead = el('span', { class: 'ico' }, img);
+        img.onerror = () => { lead.replaceWith(badge); };
+      }
+      const b = el('button', {}, lead, el('span', { class: 'tt' }, t.title));
+      b.addEventListener('click', () => playIndex(i));
+      list.append(el('li', {}, b));
+    });
+  }
+  updateUI();
+}
+
+let wakeLock = null;
+async function keepAwake(on) {
+  try {
+    if (!('wakeLock' in navigator)) return;
+    if (on && !wakeLock) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } else if (!on && wakeLock) {
+      const w = wakeLock; wakeLock = null; await w.release();
+    }
+  } catch (e) { wakeLock = null; }
+}
+// The screen is kept on while a story plays (if allowed) and always while playlists are downloading.
+function syncAwake() {
+  const playing = !!state.now && !audio.paused && !state.now.done;
+  keepAwake((playing && state.awake) || state.dlRunning);
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncAwake(); });
+function updateUI() {
+  const n = state.now;
+  const playing = !!n && !audio.paused && !n.done;
+  $('playBtn').innerHTML = playing ? ICONS.pause : ICONS.play;
+  $('miniPlay').innerHTML = playing ? ICONS.pause : ICONS.play;
+  syncAwake();
+  if (!n) return;
+  $('ptrack').textContent = n.tracks[n.index] ? n.tracks[n.index].title : '';
+  $('miniName').textContent = n.card.title;
+  if (!$('miniArt').firstChild || $('miniArt').dataset.card !== n.card.id) {
+    artFor(n.card, $('miniArt'));
+    $('miniArt').dataset.card = n.card.id;
+  }
+  const items = $('tracks').querySelectorAll('button');
+  items.forEach((b, i) => b.classList.toggle('now', i === n.index));
+  // Keep the playing track in view when it changes (but don't fight the child's scrolling).
+  if (state.lastScrolledIndex !== n.index && items[n.index]) {
+    state.lastScrolledIndex = n.index;
+    try { items[n.index].scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+  }
+}
+
+function syncPlayerFav() {
+  const n = state.now;
+  $('pFav').classList.toggle('on', !!n && getFavs().includes(n.card.id));
+}
+function showPlayer() {
+  syncPlayerFav(); $('player').hidden = false; $('mini').hidden = true; }
+function hidePlayer() {
+  $('player').hidden = true;
+  $('mini').hidden = !state.now;
+}
+
+/* ---------- wire up ---------- */
+function wire() {
+  $('backBtn').innerHTML = ICONS.back;
+  $('gClose').innerHTML = ICONS.close;
+  $('pFav').innerHTML = ICONS.heart;
+  $('pFav').addEventListener('click', () => { if (state.now) setFav(state.now.card.id); });
+  $('prevBtn').innerHTML = ICONS.prev;
+  $('nextBtn').innerHTML = ICONS.next;
+  $('rewBtn').innerHTML = ICONS.rew10;
+  $('playBtn').innerHTML = ICONS.play;
+  $('miniPlay').innerHTML = ICONS.play;
+  $('loginBtn').addEventListener('click', startLogin);
+  $('backBtn').addEventListener('click', hidePlayer);
+  $('playBtn').addEventListener('click', togglePlay);
+  $('prevBtn').addEventListener('click', goPrev);
+  $('nextBtn').addEventListener('click', goNext);
+  $('rewBtn').addEventListener('click', rewind10);
+  $('miniPlay').addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
+  $('mini').addEventListener('click', showPlayer);
+  $('hintOk').addEventListener('click', () => { store('tm_hint', 'off'); updateHint(); });
+
+  // Maths question
+  $('lockOk').addEventListener('click', lockSubmit);
+  $('lockA').addEventListener('keydown', (e) => { if (e.key === 'Enter') lockSubmit(); });
+  $('lockCancel').addEventListener('click', () => { $('lock').hidden = true; lockCb = null; });
+
+  // Grown-ups corner
+  $('gClose').addEventListener('click', closeGrownups);
+  for (const b of document.querySelectorAll('.gtab')) b.addEventListener('click', () => showPane(b.dataset.pane));
+  $('capSel').addEventListener('change', (e) => {
+    state.settings.cap = Number(e.target.value) || 2 * GB;
+    store('tm_cap', String(state.settings.cap));
+    paintStats();
+  });
+  let dlTimer = null;
+  $('dlSearch').addEventListener('input', (e) => {
+    clearTimeout(dlTimer);
+    dlTimer = setTimeout(() => { state.dlQuery = e.target.value; renderDlList(); }, 150);
+  });
+  $('dlFilter').addEventListener('change', (e) => { state.dlFilter = e.target.value; renderDlList(); });
+  $('dlAll').addEventListener('click', downloadAll);
+  $('dlNone').addEventListener('click', removeAll);
+
+  $('profAdd').addEventListener('click', () => openProfEdit(null));
+  let pfTimer = null;
+  $('pfSearch').addEventListener('input', () => { clearTimeout(pfTimer); pfTimer = setTimeout(renderPick, 150); });
+  $('pfAll').addEventListener('click', () => { for (const c of pickShown()) pf.ids.add(c.id); renderPick(); });
+  $('pfNone').addEventListener('click', () => { for (const c of pickShown()) pf.ids.delete(c.id); renderPick(); });
+  $('pfSave').addEventListener('click', saveProfile);
+  $('pfCancel').addEventListener('click', closeProfEdit);
+  $('pfDelete').addEventListener('click', deleteProfile);
+
+  $('swOnlyDl').addEventListener('click', () => {
+    state.settings.onlyDl = !state.settings.onlyDl;
+    store('tm_onlydl', state.settings.onlyDl ? 'on' : 'off');
+    state.libDirty = true; swPaint();
+  });
+  $('swLock').addEventListener('click', () => {
+    state.settings.lock = !state.settings.lock;
+    store('tm_lock', state.settings.lock ? 'on' : 'off');
+    swPaint();
+  });
+  $('swAwake').addEventListener('click', () => {
+    state.awake = !state.awake;
+    store('tm_awake', state.awake ? 'on' : 'off');
+    swPaint(); syncAwake();
+  });
+  $('gReload').addEventListener('click', async () => {
+    $('gReload').textContent = 'Loading…';
+    try { await loadLibrary(); $('gReload').textContent = '✓ Reloaded'; }
+    catch (e) { handleLoadError(e); $('gReload').textContent = e instanceof TypeError ? 'No internet' : 'Could not reload'; }
+    setTimeout(() => { $('gReload').textContent = 'Reload playlists from Yoto'; }, 2500);
+  });
+  $('gSignOut').addEventListener('click', () => {
+    if (!confirm('Sign out? Playlists saved on this device will stay here.')) return;
+    audio.pause(); audio.removeAttribute('src'); releaseBlob(); dropPre();
+    state.now = null; setCards([]); state.groups = []; state.group = null;
+    unstore('tm_tokens'); unstore('tm_library'); unstore('tm_groups');
+    $('grownups').hidden = true;
+    showLogin();
+  });
+  $('gCopy').addEventListener('click', async () => {
+    const text = $('dbg').textContent;
+    try { await navigator.clipboard.writeText(text); $('gCopy').textContent = '✓ Copied'; }
+    catch (e) {
+      try { const r = document.createRange(); r.selectNodeContents($('dbg')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('gCopy').textContent = 'Selected: now press Copy on your keyboard'; } catch (e2) {}
+    }
+    setTimeout(() => { $('gCopy').textContent = 'Copy'; }, 2500);
+  });
+
+  let searchTimer = null;
+  $('search').addEventListener('input', (e) => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { state.query = e.target.value; renderGrid(); }, 150);
+  });
+  $('search').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
+
+  for (const b of document.querySelectorAll('.tab')) {
+    b.addEventListener('click', () => {
+      state.tab = b.dataset.tab === 'club' ? 'club' : 'mine';
+      store('tm_tab', state.tab);
+      renderChrome(); renderGrid();
+    });
+  }
+  $('sortSel').value = state.sort;
+  $('sortSel').addEventListener('change', (e) => {
+    state.sort = ['az', 'new', 'recent'].includes(e.target.value) ? e.target.value : 'az';
+    store('tm_sort', state.sort);
+    renderGrid();
+  });
+  $('viewBtn').addEventListener('click', () => {
+    state.view = state.view === 'list' ? 'tiles' : 'list';
+    store('tm_view', state.view);
+    applyView();
+  });
+  $('groupAll').addEventListener('click', () => { state.group = null; renderChrome(); renderGrid(); });
+
+  // Going online / offline
+  window.addEventListener('offline', () => { state.offline = true; if (!$('library').hidden) renderLibrary(); });
+  window.addEventListener('online', () => {
+    if (!getTokens() || $('library').hidden) return;
+    loadLibrary().catch(handleLoadError);
+  });
+
+  document.addEventListener('gesturestart', (e) => e.preventDefault());
+  setupLongPress();
+}
+
+function handleLoadError(e) {
+  if (e.message === 'signin') { showLogin('Please sign in again.'); return; }
+  state.loadError = e.message;
+  if (e instanceof TypeError) state.offline = true;   // couldn't reach Yoto at all
+  showLibrary();
+  renderLibrary();
+  if (state.cards.length) return;   // keep showing the saved list quietly
+  if (!(e instanceof TypeError)) setLibraryMessage(e.message);
+}
+
+function registerHelper() {
+  if (!('serviceWorker' in navigator)) { state.sw = 'not supported on this browser'; return; }
+  navigator.serviceWorker.register('sw.js').then(
+    () => { state.sw = 'running'; },
+    (err) => { state.sw = 'problem: ' + (err && err.message ? err.message : err); }
+  );
+}
+
+(async function init() {
+  wire();
+  registerHelper();
+  loadSettings();
+  state.dl = cleanDl(readJson('tm_dl', {}));
+  state.profiles = cleanProfiles(readJson('tm_profiles', []));
+  state.profileId = fetchStored('tm_profile');
+  state.offline = navigator.onLine === false;
+  try {
+    await handleCallback();
+  } catch (e) {
+    showLogin(e.message);
+    return;
+  }
+  if (!getTokens()) { showLogin(); return; }
+  // Show the saved list straight away, then quietly refresh it.
+  state.tab = fetchStored('tm_tab') === 'club' ? 'club' : 'mine';
+  state.view = fetchStored('tm_view') === 'list' ? 'list' : 'tiles';
+  state.sort = ['az', 'new', 'recent'].includes(fetchStored('tm_sort')) ? fetchStored('tm_sort') : 'az';
+  $('sortSel').value = state.sort;
+  state.seen = readJson('tm_seen', {}) || {};
+  state.prevOpen = Number(fetchStored('tm_lastopen')) || null;
+  store('tm_lastopen', String(Date.now()));
+  state.fresh = newIds(state.seen, newCutoff(state.prevOpen, Date.now()));
+  try { await reconcileDownloads(); } catch (e) {}
+  const cached = loadLibraryCache();
+  if (cached.length) { setCards(cached); state.groups = loadGroupsCache(); renderLibrary(); showLibrary(); }
+  try { await loadLibrary(); } catch (e) { handleLoadError(e); }
+  refreshEstimate();
+})();
+</script>
+</body>
+</html>
