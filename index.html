@@ -461,6 +461,19 @@
     background: #eef3f9; padding: 10px; border-radius: 10px; font-size: .72rem; overflow: auto;
     max-height: 50vh; -webkit-user-select: text; user-select: text; white-space: pre-wrap; word-break: break-all;
   }
+
+  /* Phones held upright: 3 tiles across (like the official Yoto app). Pictures view only; the list view, iPads and laptops are unchanged. */
+  @media (max-width: 600px) and (orientation: portrait) {
+    #grid:not(.list) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 9px; }
+    #grid:not(.list) .tile { padding: 5px 5px 8px; border-radius: 14px; gap: 6px; }
+    #grid:not(.list) .art { border-radius: 10px; }
+    #grid:not(.list) .name { font-size: .78rem; min-height: 2.5em; }
+    #grid:not(.list) .ph { font-size: 2rem; }
+    #grid:not(.list) .fav { top: 7px; right: 7px; width: 30px; height: 30px; }
+    #grid:not(.list) .fav svg { width: 17px; height: 17px; }
+    #grid:not(.list) .badge-new { top: 7px; left: 7px; font-size: .6rem; padding: 3px 6px; }
+    #grid:not(.list) .badge-dl { width: 20px; height: 20px; font-size: .7rem; left: 4px; bottom: 4px; }
+  }
 </style>
 </head>
 <body>
@@ -679,7 +692,7 @@
 <script>
 'use strict';
 
-const VERSION = 'v1.1: space tally + clearer refresh button';
+const VERSION = 'v1.2: 3 tiles across on phones';
 // How the group pictures across the top are ordered:
 //   'yoto'   = the same order as in the Yoto app
 //   'newest' = most recently created group first
