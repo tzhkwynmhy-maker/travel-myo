@@ -411,6 +411,25 @@
   .meter { height: 12px; border-radius: 6px; background: var(--track); overflow: hidden; margin: 10px 0 6px; }
   .meter i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 6px; }
   .meter.over i { background: #d9534f; }
+  /* Pinned space tally (Downloads screen only) */
+  .tally {
+    position: sticky; bottom: 0; z-index: 3; background: #fff; border-radius: 18px 18px 0 0;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); margin: 0 -4px;
+    box-shadow: 0 -4px 14px rgba(30, 60, 100, .16);
+  }
+  .tally .tl1 { font-weight: 800; font-size: 1.05rem; }
+  .tally .tl1 b { color: var(--accent-dark); }
+  .tally .tl2 { font-size: .85rem; color: var(--soft); margin-top: 1px; }
+  .tmeter { position: relative; height: 10px; border-radius: 5px; background: var(--track); overflow: hidden; margin: 7px 0 5px; }
+  .tmeter i { position: absolute; top: 0; bottom: 0; left: 0; width: 0; transition: width .2s; }
+  .tmeter .a { background: var(--accent); }
+  .tmeter .b { background: var(--accent); opacity: .4; }
+  .tally.warn .a, .tally.warn .b { background: #e69a1c; opacity: 1; }
+  .tally.warn .b { opacity: .55; }
+  .tally.over .a, .tally.over .b { background: #d9534f; opacity: 1; }
+  .tally.warn .tl1 b, .tally.warn .tl2 { color: #a35c00; }
+  .tally.over .tl1 b, .tally.over .tl2 { color: #b3261e; }
+  .sw:disabled { opacity: .35; }
   .warn { color: #a35c00; font-weight: 700; }
   #dlList, #profList, #pfList { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
   .drow {
@@ -591,6 +610,11 @@
         </div>
       </div>
       <ul id="dlList"></ul>
+      <div id="tally" class="tally" aria-live="polite">
+        <div class="tl1" id="tl1"></div>
+        <div class="tmeter"><i class="a" id="tlA"></i><i class="b" id="tlB"></i></div>
+        <div class="tl2" id="tl2"></div>
+      </div>
     </div>
 
     <div id="paneProfiles" class="pane" hidden>
@@ -634,9 +658,10 @@
       </div>
       <div class="panel">
         <div class="line wrap">
-          <button id="gReload" class="btn">Reload playlists from Yoto</button>
+          <button id="gReload" class="btn">Check Yoto for new playlists</button>
           <button id="gSignOut" class="btn danger">Sign out</button>
         </div>
+        <p class="p soft small">Updates the list only. It doesn't download anything.</p>
         <p class="p soft small">Signing out keeps your saved playlists on this device.</p>
       </div>
     </div>
@@ -654,7 +679,7 @@
 <script>
 'use strict';
 
-const VERSION = 'v1: first Travel MYO';
+const VERSION = 'v1.1: space tally + clearer refresh button';
 // How the group pictures across the top are ordered:
 //   'yoto'   = the same order as in the Yoto app
 //   'newest' = most recently created group first
@@ -1647,7 +1672,7 @@ function enqueueDownload(card) {
   dlQueue.push(card.id);
   if (!state.dlRun) state.dlRun = { total: 0, done: 0, ok: 0, failed: 0 };
   state.dlRun.total++;
-  paintRow(card.id); paintBanner();
+  paintRow(card.id); paintBanner(); paintTally();
   try { if (navigator.storage && navigator.storage.persist && state.persisted == null) navigator.storage.persist().then((ok) => { state.persisted = ok; paintStats(); }, () => {}); } catch (e) {}
   pump();
 }
@@ -1657,7 +1682,7 @@ function cancelDownload(id) {
   job.abort.abort();
   const i = dlQueue.indexOf(id);
   if (i >= 0) { dlQueue.splice(i, 1); if (state.dlRun) state.dlRun.total = Math.max(state.dlRun.done, state.dlRun.total - 1); delete state.dlStatus[id]; }
-  paintRow(id); paintBanner();
+  paintRow(id); paintBanner(); paintTally();
 }
 async function pump() {
   if (state.dlRunning) return;
@@ -1716,7 +1741,34 @@ function rowState(c) {
     if (c.gone) bits.push('no longer in your Yoto library');
     return { sub: bits.join(' · '), cls: upd ? 'upd' : '', on: true, upd };
   }
+  if (c.size && c.size > roomLeft()) return { sub: "Won't fit · about " + formatBytes(c.size) + ', ' + formatBytes(Math.max(0, roomLeft())) + ' left', cls: 'upd', on: false, blocked: true };
   return { sub: c.size ? 'About ' + formatBytes(c.size) : 'Not saved', on: false };
+}
+// Space still free after what's saved and what's been chosen but not finished yet.
+function pendingBytes() {
+  let s = 0;
+  for (const id of Object.keys(state.dlStatus)) {
+    const j = state.dlStatus[id];
+    if (j && (j.s === 'active' || j.s === 'queued')) { const c = state.byId.get(id); s += (c && c.size) || 0; }
+  }
+  return s;
+}
+function roomLeft() { return state.settings.cap - usedBytes(state.dl) - pendingBytes(); }
+function paintTally() {
+  const cap = state.settings.cap, used = usedBytes(state.dl), pend = pendingBytes(), total = used + pend;
+  const pct = (n) => Math.min(100, cap ? n / cap * 100 : 0);
+  $('tlA').style.width = pct(used) + '%';
+  $('tlB').style.left = pct(used) + '%';
+  $('tlB').style.width = Math.max(0, pct(total) - pct(used)) + '%';
+  const t = $('tally');
+  t.classList.toggle('over', total > cap);
+  t.classList.toggle('warn', total <= cap && total > cap * 0.85);
+  $('tl1').replaceChildren(document.createTextNode(formatBytes(total) + ' of ' + capLabel(cap / GB) + ' used'));
+  if (pend) $('tl1').append(document.createTextNode(' '), el('b', {}, '(+' + formatBytes(pend) + ' chosen)'));
+  const n = Object.keys(state.dl).length;
+  $('tl2').textContent = total > cap ? 'Over by ' + formatBytes(total - cap) + '. Remove something or choose more space.'
+    : formatBytes(cap - total) + ' left · ' + n + ' saved';
+  for (const id of rowEls.keys()) paintRow(id);
 }
 function makeRow(c) {
   const thumb = el('div', { class: 'thumb' }); artFor(c, thumb);
@@ -1741,6 +1793,7 @@ function paintRow(id) {
   r.bar.firstChild.style.width = Math.round((st.prog || 0) * 100) + '%';
   r.sw.setAttribute('aria-checked', st.on ? 'true' : 'false');
   r.upd.hidden = !st.upd || !!state.dlStatus[id];
+  r.sw.disabled = !!st.blocked;
 }
 function dlListed() {
   const q = state.dlQuery.trim().toLowerCase();
@@ -1786,6 +1839,7 @@ function paintStats() {
     ? '✓ This device has agreed to keep your downloads.'
     : 'Tip: on an iPad or iPhone, open Travel MYO from its Home Screen icon (Share, then Add to Home Screen). Safari can otherwise clear saved playlists after a week without use.';
   paintDevice();
+  paintTally();
   if (state.dlDone && !state.dlRun) { $('dlBanner').textContent = state.dlDone; $('dlBanner').hidden = false; }
   refreshEstimate();
 }
@@ -2283,9 +2337,9 @@ function wire() {
   });
   $('gReload').addEventListener('click', async () => {
     $('gReload').textContent = 'Loading…';
-    try { await loadLibrary(); $('gReload').textContent = '✓ Reloaded'; }
-    catch (e) { handleLoadError(e); $('gReload').textContent = e instanceof TypeError ? 'No internet' : 'Could not reload'; }
-    setTimeout(() => { $('gReload').textContent = 'Reload playlists from Yoto'; }, 2500);
+    try { await loadLibrary(); $('gReload').textContent = '✓ Up to date'; }
+    catch (e) { handleLoadError(e); $('gReload').textContent = e instanceof TypeError ? 'No internet' : 'Could not check'; }
+    setTimeout(() => { $('gReload').textContent = 'Check Yoto for new playlists'; }, 2500);
   });
   $('gSignOut').addEventListener('click', () => {
     if (!confirm('Sign out? Playlists saved on this device will stay here.')) return;
