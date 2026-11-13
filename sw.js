@@ -1,6 +1,6 @@
 // Travel MYO helper: keeps the app itself (and its little pictures) available with no internet.
 // Saved playlists' sound files are stored by the app page itself, not here.
-const VERSION = 'v1';
+const VERSION = 'v1.3';
 const SHELL = 'tm-shell-' + VERSION;   // the app page, icon (replaced on every new version)
 const IMAGES = 'tm-images';            // covers and little track pictures seen while online (kept)
 const FILES = ['./', './index.html', './icon.png', './manifest.json'];
@@ -23,11 +23,20 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
+// No-data mode: the app page leaves a small marker here; while it exists, this helper never uses the internet.
+async function noData() {
+  try { return !!(await (await caches.open('tm-flags')).match(self.location.origin + '/__tm__nodata')); } catch (e) { return false; }
+}
+
 const wait = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error('slow')), ms));
 
 // The app page: use the internet copy if it answers quickly (so updates arrive), otherwise the saved copy.
 async function pagePlease(req) {
   const cache = await caches.open(SHELL);
+  if (await noData()) {
+    const saved = (await cache.match(req, { ignoreSearch: true })) || (await cache.match('./index.html')) || (await cache.match('./'));
+    if (saved) return saved;
+  }
   try {
     const res = await Promise.race([fetch(req), wait(4000)]);
     if (res && res.ok) {
@@ -46,6 +55,7 @@ async function pagePlease(req) {
 async function filePlease(req, event) {
   const cache = await caches.open(SHELL);
   const hit = await cache.match(req, { ignoreSearch: true });
+  if (hit && (await noData())) return hit;
   const refresh = fetch(req).then((res) => { if (res && res.ok) cache.put(req, res.clone()); return res; }).catch(() => null);
   if (hit) { event.waitUntil(refresh); return hit; }
   return (await refresh) || Response.error();
@@ -60,6 +70,7 @@ async function picturePlease(req) {
   const cache = await caches.open(IMAGES);
   const hit = await cache.match(req.url);
   if (hit) return hit;
+  if (await noData()) return Response.error();
   try {
     const res = await pictureFetch(req.url);
     if (res && (res.ok || res.type === 'opaque')) cache.put(req.url, res.clone());

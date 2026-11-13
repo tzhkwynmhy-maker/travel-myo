@@ -214,6 +214,12 @@
   #grid.list .tile { padding-right: 66px; }
   #grid.list .badge-new { top: 6px; left: 6px; font-size: .62rem; padding: 3px 7px; }
   .sortrow { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 0 4px 12px; font-weight: 700; color: var(--soft); }
+  #dataBtn {
+    margin-right: auto; font: inherit; font-weight: 800; font-size: .9rem; color: var(--soft); background: #fff;
+    border: 2px solid #c9dcee; border-radius: 999px; padding: 8px 14px; box-shadow: 0 3px 0 #c9dcee;
+  }
+  #dataBtn:active { transform: translateY(2px); box-shadow: 0 1px 0 #c9dcee; }
+  #dataBtn.on { background: #fff3c4; color: #5a4300; border-color: #e6b84a; box-shadow: 0 3px 0 #e6b84a; }
   #sortSel {
     font: inherit; font-weight: 700; color: var(--ink); background: #fff; border: 2px solid var(--line);
     border-radius: 999px; padding: 8px 14px; -webkit-appearance: none; appearance: none; outline: none;
@@ -523,6 +529,7 @@
     <button id="groupAll">Show all</button>
   </div>
   <div id="sortRow" class="sortrow">
+    <button id="dataBtn" type="button" aria-pressed="false" aria-label="No-data mode: only show and play playlists saved on this device"></button>
     <label for="sortSel">Sort</label>
     <select id="sortSel" aria-label="Sort playlists">
       <option value="az">A to Z</option>
@@ -692,7 +699,7 @@
 <script>
 'use strict';
 
-const VERSION = 'v1.2: 3 tiles across on phones';
+const VERSION = 'v1.3: No-data mode button';
 // How the group pictures across the top are ordered:
 //   'yoto'   = the same order as in the Yoto app
 //   'newest' = most recently created group first
@@ -980,7 +987,39 @@ function loadSettings() {
 }
 function saveProfiles() { writeJson('tm_profiles', state.profiles); }
 function currentProfile() { return state.profiles.find((p) => p.id === state.profileId) || null; }
-function onlyDlNow() { return state.settings.onlyDl || state.offline; }
+// ---- No-data mode: act like airplane mode inside the app, without touching the phone's settings ----
+function dataBlocked() { if (state.noData) throw new TypeError('nodata'); }
+const NODATA_MSG = 'No-data mode is on, so nothing can be saved right now. Turn it off first (the Data button on the main screen).';
+// Tells the offline helper (sw.js), which can't see our settings, so it also stays off the internet.
+async function flagHelper(on) {
+  try {
+    if (typeof caches === 'undefined') return;
+    const c = await caches.open('tm-flags'), k = location.origin + '/__tm__nodata';
+    if (on) await c.put(k, new Response('1')); else await c.delete(k);
+  } catch (e) {}
+}
+function paintDataBtn() {
+  const b = $('dataBtn'); if (!b) return;
+  b.classList.toggle('on', !!state.noData);
+  b.setAttribute('aria-pressed', state.noData ? 'true' : 'false');
+  b.textContent = state.noData ? '📵 No data' : '📶 Data on';
+}
+function setNoData(on) {
+  state.noData = !!on;
+  store('tm_nodata', on ? 'on' : 'off');
+  flagHelper(!!on);
+  if (on) {
+    state.offline = true;
+    for (const id of Object.keys(state.dlStatus)) { const j = state.dlStatus[id]; if (j && (j.s === 'active' || j.s === 'queued')) cancelDownload(id); }
+    if (state.now && !state.dl[state.now.card.id]) { try { audio.pause(); } catch (e) {} }   // a playlist being streamed stops
+  } else {
+    state.offline = navigator.onLine === false;
+    if (getTokens()) loadLibrary().catch(handleLoadError);   // quietly catch up with Yoto
+  }
+  renderLibrary();
+  updateUI();
+}
+function onlyDlNow() { return state.settings.onlyDl || state.offline || !!state.noData; }
 function currentAllow() { return allowedIds(currentProfile(), state.dl, onlyDlNow()); }
 function shownCards(query) {
   const prof = currentProfile();
@@ -1065,6 +1104,7 @@ function saveTokens(t, prev) {
 }
 let refreshing = null;
 async function refreshTokens() {
+  dataBlocked();
   if (refreshing) return refreshing;
   refreshing = (async () => {
     const t = getTokens();
@@ -1088,6 +1128,7 @@ async function refreshTokens() {
   try { return await refreshing; } finally { refreshing = null; }
 }
 async function api(path) {
+  dataBlocked();
   let t = getTokens();
   if (!t) throw new Error('signin');
   if (Date.now() > t.exp - 60000) t = await refreshTokens();
@@ -1303,6 +1344,7 @@ async function signedPicture(url) {
   if (signedPics.has(url)) return signedPics.get(url);
   let blob = null;
   try {
+    dataBlocked();
     let t = getTokens();
     if (!t) throw new Error('signin');
     if (Date.now() > t.exp - 60000) t = await refreshTokens();
@@ -1340,7 +1382,8 @@ function renderGroups(groups) {
           if (t.url.startsWith(CONFIG.apiBase)) {
             im.dataset.from = t.from + ' (signed in)';
             signedPicture(t.url).then((u) => { im.src = u; }, next);
-          } else im.src = t.url;
+          } else if (state.noData) next();
+          else im.src = t.url;
         }
         else { state.groupPics[g.name] = 'none of the pictures would load'; pic.replaceChildren(placeholder(g.name)); }
       };
@@ -1400,12 +1443,17 @@ function renderChrome() {
   $('groupHead').hidden = !g;
   if (g) $('groupName').textContent = g.name;
   for (const b of document.querySelectorAll('.tab')) b.classList.toggle('on', b.dataset.tab === state.tab);
-  $('offlineBar').hidden = !state.offline;
+  const ob = $('offlineBar');
+  ob.hidden = !(state.offline || state.noData);
+  ob.textContent = state.noData
+    ? '📵 No-data mode is on. Showing only playlists saved on this device, and nothing is using your data.'
+    : '✈️ No internet right now, so here are the playlists saved on this device.';
+  paintDataBtn();
 }
 
 function updateMessage() {
   if (!state.cards.length) {
-    setLibraryMessage(state.loaded ? 'No playlists found.' : (state.offline ? 'No internet, and nothing is saved on this device yet.' : 'Loading playlists…'));
+    setLibraryMessage(state.loaded ? 'No playlists found.' : (state.noData ? 'No-data mode is on, and nothing is saved on this device yet.' : state.offline ? 'No internet, and nothing is saved on this device yet.' : 'Loading playlists…'));
     return;
   }
   const list = shownCards(state.query);
@@ -1599,6 +1647,7 @@ async function reconcileDownloads() {
 }
 
 async function fetchBlob(url, onFrac, signal) {
+  dataBlocked();
   const res = await fetch(url, { signal, credentials: 'omit' });
   if (!res.ok) throw new Error('The sound file could not be fetched (code ' + res.status + ').');
   const type = res.headers.get('content-type') || '';
@@ -1667,6 +1716,7 @@ function humanDlError(e) {
   const m = e && e.message;
   if (m === 'space') return 'Not enough space set aside. Choose a bigger amount above, or remove something.';
   if (m === 'signin') return 'Please sign in again.';
+  if (m === 'nodata') return 'No-data mode is on.';
   if (m === 'nourl' || m === 'empty') return "Yoto didn't give a download link for this one.";
   if (e && e.name === 'QuotaExceededError') return 'This device is full.';
   if (e instanceof TypeError) return navigator.onLine === false ? 'No internet.' : "Couldn't download. Check the Wi-Fi and try again.";
@@ -1676,6 +1726,7 @@ function humanDlError(e) {
 const rowEls = new Map();
 const dlQueue = [];
 function enqueueDownload(card) {
+  if (state.noData) { alert(NODATA_MSG); return; }
   if (state.dlStatus[card.id] && state.dlStatus[card.id].s !== 'error') return;
   const job = { s: 'queued', p: 0, msg: '', abort: new AbortController() };
   job.progress = (p) => {
@@ -1866,6 +1917,7 @@ function buildCapSelect() {
   sel.value = String(state.settings.cap);
 }
 async function downloadAll() {
+  if (state.noData) { alert(NODATA_MSG); return; }
   const todo = dlListed().filter((c) => !state.dlStatus[c.id] && (!state.dl[c.id] || needsUpdate(c, state.dl[c.id])));
   if (!todo.length) { alert('Everything shown is already saved.'); return; }
   const known = todo.reduce((s, c) => s + (c.size || 0), 0);
@@ -1991,7 +2043,7 @@ function gatherInfo() {
     version: VERSION,
     callbackUsed: CONFIG.redirectUri,
     offlineHelperFile: state.sw,
-    online: navigator.onLine, treatedAsOffline: state.offline,
+    online: navigator.onLine, noDataMode: !!state.noData, treatedAsOffline: state.offline,
     deviceKeepsDownloads: state.persisted,
     deviceStorage: state.est ? { using: formatBytes(state.est.usage), quota: formatBytes(state.est.quota) } : null,
     savedPlaylists: Object.keys(state.dl).length,
@@ -2400,8 +2452,9 @@ function wire() {
 
   // Going online / offline
   window.addEventListener('offline', () => { state.offline = true; if (!$('library').hidden) renderLibrary(); });
+  $('dataBtn').addEventListener('click', () => setNoData(!state.noData));
   window.addEventListener('online', () => {
-    if (!getTokens() || $('library').hidden) return;
+    if (state.noData || !getTokens() || $('library').hidden) return;
     loadLibrary().catch(handleLoadError);
   });
 
@@ -2434,7 +2487,9 @@ function registerHelper() {
   state.dl = cleanDl(readJson('tm_dl', {}));
   state.profiles = cleanProfiles(readJson('tm_profiles', []));
   state.profileId = fetchStored('tm_profile');
-  state.offline = navigator.onLine === false;
+  state.noData = fetchStored('tm_nodata') === 'on';
+  state.offline = navigator.onLine === false || state.noData;
+  flagHelper(state.noData);
   try {
     await handleCallback();
   } catch (e) {
